@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: pace
+  datasource:
+    url: ${PACE_DATABASE_URL:jdbc:postgresql://localhost:5432/pace}
+    username: ${PACE_DATABASE_USER:pace}
+    password: ${PACE_DATABASE_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  mvc:
+    problemdetails:
+      enabled: true
+server:
+  port: ${PACE_BACKEND_PORT:8080}
+  max-http-request-header-size: 16KB
+springdoc:
+  swagger-ui:
+    path: /documentation-api
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+pace:
+  access:
+    enabled: ${PACE_ACCESS_ENABLED:true}
+    token: ${PACE_API_ACCESS_TOKEN:}
+  garmin:
+    connector:
+      base-url: ${PACE_GARMIN_CONNECTOR_URL:http://localhost:8081}
+      token: ${PACE_GARMIN_CONNECTOR_TOKEN:}
+      connection-timeout: 3s
+      read-timeout: 20s

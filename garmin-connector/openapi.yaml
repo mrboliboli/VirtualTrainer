@@ -1,0 +1,171 @@
+openapi: 3.1.0
+info:
+  title: Connecteur Garmin personnel de Pace
+  version: 0.1.0
+  description: API interne, locale, expérimentale et strictement en lecture seule.
+servers:
+  - url: http://connecteur-garmin:8081/interne/v1
+security:
+  - cleService: []
+paths:
+  /sante:
+    get:
+      security: []
+      operationId: verifierSante
+      responses:
+        "200":
+          description: Processus disponible, sans appel à Garmin.
+          content:
+            application/json:
+              schema: {$ref: "#/components/schemas/Sante"}
+  /session:
+    get:
+      operationId: lireEtatSession
+      responses:
+        "200": {description: État local, content: {application/json: {schema: {$ref: "#/components/schemas/Session"}}}}
+        "401": {$ref: "#/components/responses/Erreur"}
+        "503": {$ref: "#/components/responses/Erreur"}
+    delete:
+      operationId: supprimerSessionLocale
+      description: Supprime la session locale. Ne prétend pas révoquer le jeton chez Garmin.
+      responses:
+        "204": {description: Session locale supprimée}
+        "401": {$ref: "#/components/responses/Erreur"}
+  /session/connexion:
+    post:
+      operationId: commencerConnexion
+      description: Les identifiants restent en mémoire le temps de l'échange et ne sont jamais persistés.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/DemandeConnexion"}
+      responses:
+        "200": {description: Session créée, content: {application/json: {schema: {$ref: "#/components/schemas/Session"}}}}
+        "202": {description: MFA requise, content: {application/json: {schema: {$ref: "#/components/schemas/Erreur"}}}}
+        "401": {$ref: "#/components/responses/Erreur"}
+        "429": {$ref: "#/components/responses/Erreur"}
+        "503": {$ref: "#/components/responses/Erreur"}
+  /session/mfa:
+    post:
+      operationId: terminerMfa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/DemandeMfa"}
+      responses:
+        "200": {description: Session créée, content: {application/json: {schema: {$ref: "#/components/schemas/Session"}}}}
+        "401": {$ref: "#/components/responses/Erreur"}
+        "429": {$ref: "#/components/responses/Erreur"}
+        "503": {$ref: "#/components/responses/Erreur"}
+  /activites:
+    get:
+      operationId: listerActivites
+      parameters:
+        - {name: limite, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 20}}
+        - {name: debut, in: query, schema: {type: string, format: date}}
+        - {name: fin, in: query, schema: {type: string, format: date}}
+      responses:
+        "200": {description: Activités récentes ou backfill par dates, content: {application/json: {schema: {$ref: "#/components/schemas/ListeActivites"}}}}
+        "401": {$ref: "#/components/responses/Erreur"}
+        "429": {$ref: "#/components/responses/Erreur"}
+        "503": {$ref: "#/components/responses/Erreur"}
+  /activites/{identifiant}:
+    get:
+      operationId: lireActivite
+      parameters:
+        - {$ref: "#/components/parameters/IdentifiantActivite"}
+      responses:
+        "200": {description: Détail brut en lecture seule, content: {application/json: {schema: {$ref: "#/components/schemas/Activite"}}}}
+        "401": {$ref: "#/components/responses/Erreur"}
+        "429": {$ref: "#/components/responses/Erreur"}
+        "503": {$ref: "#/components/responses/Erreur"}
+  /activites/{identifiant}/fit:
+    get:
+      operationId: telechargerFit
+      parameters:
+        - {$ref: "#/components/parameters/IdentifiantActivite"}
+      responses:
+        "200":
+          description: FIT et ETag SHA-256 servant de clé d'idempotence du contenu.
+          headers:
+            ETag: {schema: {type: string}}
+          content:
+            application/vnd.ant.fit:
+              schema: {type: string, format: binary}
+        "401": {$ref: "#/components/responses/Erreur"}
+        "429": {$ref: "#/components/responses/Erreur"}
+        "501": {$ref: "#/components/responses/Erreur"}
+        "503": {$ref: "#/components/responses/Erreur"}
+components:
+  securitySchemes:
+    cleService:
+      type: apiKey
+      in: header
+      name: X-Cle-Service
+  parameters:
+    IdentifiantActivite:
+      name: identifiant
+      in: path
+      required: true
+      schema: {type: string, minLength: 1, maxLength: 128}
+  responses:
+    Erreur:
+      description: Erreur typée, sans secret.
+      content:
+        application/json:
+          schema: {$ref: "#/components/schemas/Erreur"}
+  schemas:
+    Sante:
+      type: object
+      required: [statut, connecteur_actif]
+      properties:
+        statut: {type: string, const: OK}
+        connecteur_actif: {type: boolean}
+    EtatSession:
+      type: string
+      enum: [ABSENTE, MFA_REQUISE, CONNECTEE]
+    Session:
+      type: object
+      required: [etat, message]
+      properties:
+        etat: {$ref: "#/components/schemas/EtatSession"}
+        message: {type: string}
+    DemandeConnexion:
+      type: object
+      additionalProperties: false
+      required: [courriel, mot_de_passe]
+      properties:
+        courriel: {type: string, minLength: 3, maxLength: 254}
+        mot_de_passe: {type: string, format: password, writeOnly: true, minLength: 1, maxLength: 512}
+    DemandeMfa:
+      type: object
+      additionalProperties: false
+      required: [code]
+      properties:
+        code: {type: string, format: password, writeOnly: true, minLength: 4, maxLength: 12}
+    Activite:
+      type: object
+      required: [identifiant, donnees]
+      properties:
+        identifiant: {type: string}
+        donnees: {type: object, additionalProperties: true}
+    ListeActivites:
+      type: object
+      required: [activites, limite]
+      properties:
+        activites: {type: array, items: {$ref: "#/components/schemas/Activite"}}
+        limite: {type: integer}
+        debut: {type: [string, "null"], format: date}
+        fin: {type: [string, "null"], format: date}
+    Erreur:
+      type: object
+      required: [code, type, message, correlation_id]
+      properties:
+        code: {type: string}
+        type:
+          type: string
+          enum: [TEMPORAIRE, DEFINITIVE, AUTHENTIFICATION, MFA_REQUISE, LIMITE_FREQUENCE, INDISPONIBLE]
+        message: {type: string}
+        correlation_id: {type: string}

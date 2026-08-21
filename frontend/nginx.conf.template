@@ -1,0 +1,24 @@
+server {
+    listen 8080;
+    server_name _;
+
+    location = /sante {
+        access_log off;
+        return 200 "ok\n";
+    }
+
+    location /api/ {
+        auth_basic "Pace";
+        auth_basic_user_file /tmp/pace.htpasswd;
+        proxy_set_header X-Cle-Pace "${PACE_API_ACCESS_TOKEN}";
+        proxy_pass http://backend:8080;
+        client_max_body_size 1m;
+    }
+
+    location / {
+        auth_basic "Pace";
+        auth_basic_user_file /tmp/pace.htpasswd;
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /index.html;
+    }
+}
