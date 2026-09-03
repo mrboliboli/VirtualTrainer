@@ -79,19 +79,28 @@ public class GarminSynchronizationService {
                 .filter(value -> value.getExternalId().equals(externalId))
                 .findFirst()
                 .orElseThrow(SynchronizationCandidateNotFoundException::new);
-        if (activityRepository.findBySourceAndSourceExternalId("GARMIN_PERSONNEL", externalId).isPresent()) return;
-
         ExternalActivityDetails details = client.getActivity(
                 externalId,
                 candidate.getStartedAt(),
                 candidate.getSport()
         );
+        var existing = activityRepository.findBySourceAndSourceExternalId("GARMIN_PERSONNEL", externalId);
+        if (existing.isPresent()) {
+            existing.get().refreshFeedback(
+                    GarminSubjectiveFeedback.from(details, objectMapper),
+                    serialize(details),
+                    clock.instant()
+            );
+            activityRepository.save(existing.get());
+            return;
+        }
         byte[] fit = client.downloadFit(externalId);
         activityRepository.save(SynchronizedActivity.create(
                 externalId,
                 serialize(details),
                 fit,
                 sha256(fit),
+                GarminSubjectiveFeedback.from(details, objectMapper),
                 clock.instant()
         ));
     }

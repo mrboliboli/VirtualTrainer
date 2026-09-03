@@ -48,7 +48,7 @@ class SortieControllerTest {
                 id, null, null, null, "GARMIN_PERSONNEL", "A_DECODER", null,
                 null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null,
-                List.of(), List.of(), List.of(), 0, false
+                null, null, List.of(), List.of(), List.of(), 0, false
         );
         when(detailService.get(id)).thenReturn(expected);
 

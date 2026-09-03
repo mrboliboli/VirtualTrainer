@@ -107,6 +107,11 @@ fieldset { margin: 16px 0; padding: 0; border: 0; }
 .mesure-factuelle dt { color: var(--texte-secondaire); font-size: .75rem; }
 .mesure-factuelle dd { margin: 4px 0 0; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .mesure-factuelle--absente dd { color: var(--texte-secondaire); font-weight: 500; }
+.pile--compacte { gap: 12px; margin-block: 20px; }
+.calcul-factuel { padding: 14px 16px; border: 1px solid var(--bordure); border-radius: 12px; }
+.calcul-factuel h3, .calcul-factuel p { margin: 0; }
+.calcul-factuel .texte-discret { margin-top: 6px; }
+.alerte ul { margin-bottom: 0; padding-left: 20px; }
 .tableau-defilant { max-width: 100%; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: .875rem; }
 th, td { padding: 10px 12px; border-bottom: 1px solid var(--bordure); text-align: left; white-space: nowrap; }

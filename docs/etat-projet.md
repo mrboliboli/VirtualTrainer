@@ -8,8 +8,10 @@ Dernière mise à jour : 3 septembre 2026.
 2. Profil et objectifs.
 3. Connexion et synchronisation Garmin par connecteur personnel expérimental.
 4. Récupération, conservation et décodage automatique des fichiers FIT.
-5. Consultation factuelle initiale : liste des sorties, détail, métriques, tours,
-   zones, série temporelle et sorties récentes sur l'accueil.
+5. Activités et compte rendu factuel local : liste et détail des sorties, métriques,
+   tours, zones, série temporelle, récupération du ressenti Garmin, allure calculée,
+   évolution entre les deux moitiés, régularité de puissance et répartition des
+   zones.
 
 La revue de la tranche FIT ne signale plus aucun défaut P0 ou P1. Les réserves P2
 restent consignées dans `docs/revue-phase-fit.md`.
@@ -25,17 +27,10 @@ corrigée.
 
 ## Prochaine tranche fonctionnelle
 
-Achever le compte rendu factuel local avant l'intégration IA :
-
-- importer et conserver le RPE et le ressenti Garmin avec leur provenance ;
-- calculer les indicateurs objectifs à partir des données FIT normalisées ;
-- distinguer données mesurées, valeurs calculées et données absentes ;
-- afficher un compte rendu utile même sans IA ;
-- permettre une correction facultative du ressenti sans l'ajouter au parcours
-  principal.
-
-L'intégration IA vient ensuite et reçoit des agrégats validés, jamais la série FIT
-brute complète.
+La prochaine tranche est l'intégration IA. Elle reçoit des agrégats validés, jamais
+la série FIT brute complète. La comparaison prévu/réalisé, la prise en compte fine
+du relief et les conséquences sur la séance suivante seront ajoutées lorsque les
+séances planifiées seront disponibles.
 
 ## Vérification de gel
 

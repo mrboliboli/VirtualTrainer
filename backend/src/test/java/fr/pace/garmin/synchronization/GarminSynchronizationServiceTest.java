@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.ArgumentCaptor;
 
 @ExtendWith(MockitoExtension.class)
 class GarminSynchronizationServiceTest {
@@ -147,6 +148,32 @@ class GarminSynchronizationServiceTest {
         verify(client).getActivity("123", NOW, "running");
         verify(client).downloadFit("123");
         verify(activityRepository).save(any(SynchronizedActivity.class));
+    }
+
+    @Test
+    @DisplayName("Devrait persister le ressenti Garmin sans demander de seconde saisie")
+    void confirm_shouldPersistGarminFeedback_whenAvailable() {
+        ActivitySynchronization synchronization = ActivitySynchronization.create("ressenti", NOW);
+        synchronization.complete(List.of(SynchronizationCandidate.create(
+                synchronization, new ExternalActivitySummary("456", NOW, "running", 5_000L, 1_500L)
+        )), NOW);
+        when(synchronizationRepository.findById(synchronization.getId())).thenReturn(Optional.of(synchronization));
+        when(activityRepository.findBySourceAndSourceExternalId("GARMIN_PERSONNEL", "456"))
+                .thenReturn(Optional.empty());
+        when(client.getActivity("456", NOW, "running")).thenReturn(new ExternalActivityDetails(
+                "456", NOW, "running", java.util.Map.of(
+                        "summaryDTO", java.util.Map.of("perceivedExertion", 70, "activityFeel", 75)
+                )
+        ));
+        when(client.downloadFit("456")).thenReturn(new byte[]{1, 2, 3});
+
+        service().confirm(synchronization.getId(), "456");
+
+        ArgumentCaptor<SynchronizedActivity> captor = ArgumentCaptor.forClass(SynchronizedActivity.class);
+        verify(activityRepository).save(captor.capture());
+        assertThat(captor.getValue().getPerceivedExertionRpe()).isEqualTo(7);
+        assertThat(captor.getValue().getGarminFeelingScore()).isEqualTo(75);
+        assertThat(captor.getValue().getSubjectiveFeedbackSource()).isEqualTo("GARMIN");
     }
 
     private GarminSynchronizationService service() {

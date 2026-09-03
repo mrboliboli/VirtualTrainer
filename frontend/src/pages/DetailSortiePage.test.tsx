@@ -7,6 +7,7 @@ const base = {
   distanceMetres: null, dureeEcouleeSecondes: null, dureeActiveSecondes: null, vitesseMoyenneMetresParSeconde: null, vitesseMaximaleMetresParSeconde: null,
   frequenceCardiaqueMoyenne: null, frequenceCardiaqueMaximale: null, cadenceMoyenne: null, cadenceMaximale: null, puissanceMoyenneWatts: null, puissanceMaximaleWatts: null, puissanceNormaliseeWatts: null,
   calories: null, denivelePositifMetres: null, deniveleNegatifMetres: null, effetEntrainementAerobie: null, effetEntrainementAnaerobie: null, chargeEntrainement: null, tours: [], zones: [], serie: [],
+  ressenti: { rpeSurDix: null, scoreGarminSurCent: null, source: null }, compteRenduFactuel: null,
 };
 
 describe('DetailSortiePage', () => {
@@ -47,5 +48,20 @@ describe('DetailSortiePage', () => {
     render(<DetailSortiePage id={base.id} revenir={vi.fn()} />);
     expect(await screen.findByText(/1 relevé affiché sur 12.500 relevés enregistrés/)).toBeVisible();
     expect(screen.getByText(/série affichée est limitée/)).toBeVisible();
+  });
+
+  it('affiche le ressenti Garmin et distingue les calculs locaux', async () => {
+    const compteRenduFactuel = {
+      allureMoyenneSecondesParKilometre: 300, frequenceCardiaque: { premiereMoitie: 140, secondeMoitie: 147, evolutionPourcent: 5, confiance: 'MOYENNE' },
+      puissance: null, cadence: null, regularitePuissanceCoefficientVariationPourcent: null, confianceRegularitePuissance: null,
+      repartitionZones: [{ type: 'FREQUENCE_CARDIAQUE', index: 2, dureeSecondes: 1800, pourcentage: 75 }], donneesAbsentes: ['Puissance absente.'],
+    };
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ ...base, etatDecodage: 'DECODEE', ressenti: { rpeSurDix: 7, scoreGarminSurCent: 75, source: 'GARMIN' }, compteRenduFactuel }), { status: 200 })));
+    render(<DetailSortiePage id={base.id} revenir={vi.fn()} />);
+    expect(await screen.findByRole('heading', { name: 'Ressenti enregistré' })).toBeVisible();
+    expect(screen.getByText((_, element) => element?.textContent === '7\u00a0/ 10')).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Compte rendu factuel' })).toBeVisible();
+    expect(screen.getByText('Confiance moyenne')).toBeVisible();
+    expect(screen.getByText('Puissance absente.')).toBeVisible();
   });
 });

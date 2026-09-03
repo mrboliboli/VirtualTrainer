@@ -14,9 +14,12 @@ public record SortieDetailResponse(
         Integer puissanceMoyenneWatts, Integer puissanceMaximaleWatts, Integer puissanceNormaliseeWatts,
         Integer calories, Integer denivelePositifMetres, Integer deniveleNegatifMetres,
         Double effetEntrainementAerobie, Double effetEntrainementAnaerobie, Double chargeEntrainement,
+        RessentiResponse ressenti,
+        CompteRenduFactuelResponse compteRenduFactuel,
         List<TourResponse> tours, List<ZoneResponse> zones, List<EchantillonResponse> serie,
         long totalEchantillons, boolean serieTronquee
 ) {
+    public record RessentiResponse(Double rpeSurDix, Double scoreGarminSurCent, String source) { }
     public record TourResponse(int index, Instant dateHeure, Double distanceMetres,
                                Double dureeEcouleeSecondes, Double dureeActiveSecondes,
                                Short frequenceCardiaqueMoyenne, Short frequenceCardiaqueMaximale,

@@ -20,6 +20,9 @@ public class SynchronizedActivity {
     @Column(name = "details_json", nullable = false, columnDefinition = "TEXT") private String detailsJson;
     @Column(name = "original_fit", columnDefinition = "bytea") private byte[] originalFit;
     @Column(name = "fit_fingerprint", length = 64) private String fitFingerprint;
+    @Column(name = "perceived_exertion_rpe") private Double perceivedExertionRpe;
+    @Column(name = "garmin_feeling_score") private Double garminFeelingScore;
+    @Column(name = "subjective_feedback_source", length = 30) private String subjectiveFeedbackSource;
 
     protected SynchronizedActivity() { }
 
@@ -28,6 +31,7 @@ public class SynchronizedActivity {
             String detailsJson,
             byte[] fit,
             String fingerprint,
+            GarminSubjectiveFeedback feedback,
             Instant now
     ) {
         SynchronizedActivity activity = new SynchronizedActivity();
@@ -40,10 +44,24 @@ public class SynchronizedActivity {
         activity.detailsJson = detailsJson;
         activity.originalFit = fit.clone();
         activity.fitFingerprint = fingerprint;
+        activity.perceivedExertionRpe = feedback.rpe();
+        activity.garminFeelingScore = feedback.feelingScore();
+        activity.subjectiveFeedbackSource = feedback.source();
         return activity;
     }
 
     public UUID getId() { return id; }
     public String getSource() { return source; }
     public String getDetailsJson() { return detailsJson; }
+    public Double getPerceivedExertionRpe() { return perceivedExertionRpe; }
+    public Double getGarminFeelingScore() { return garminFeelingScore; }
+    public String getSubjectiveFeedbackSource() { return subjectiveFeedbackSource; }
+
+    void refreshFeedback(GarminSubjectiveFeedback feedback, String newDetailsJson, Instant now) {
+        perceivedExertionRpe = feedback.rpe();
+        garminFeelingScore = feedback.feelingScore();
+        subjectiveFeedbackSource = feedback.source();
+        detailsJson = newDetailsJson;
+        lastSynchronizedAt = now;
+    }
 }

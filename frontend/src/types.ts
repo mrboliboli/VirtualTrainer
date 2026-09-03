@@ -58,6 +58,14 @@ export interface ActiviteRecente {
   source: string;
 }
 
+export type ConfianceCalcul = 'ELEVEE' | 'MOYENNE' | 'FAIBLE';
+export interface EvolutionFactuelle {
+  premiereMoitie: number;
+  secondeMoitie: number;
+  evolutionPourcent: number | null;
+  confiance: ConfianceCalcul;
+}
+
 export interface DetailSortie {
   id: string;
   dateHeure: string | null;
@@ -84,6 +92,17 @@ export interface DetailSortie {
   effetEntrainementAerobie: number | null;
   effetEntrainementAnaerobie: number | null;
   chargeEntrainement: number | null;
+  ressenti: { rpeSurDix: number | null; scoreGarminSurCent: number | null; source: string | null };
+  compteRenduFactuel: {
+    allureMoyenneSecondesParKilometre: number | null;
+    frequenceCardiaque: EvolutionFactuelle | null;
+    puissance: EvolutionFactuelle | null;
+    cadence: EvolutionFactuelle | null;
+    regularitePuissanceCoefficientVariationPourcent: number | null;
+    confianceRegularitePuissance: ConfianceCalcul | null;
+    repartitionZones: Array<{ type: string; index: number; dureeSecondes: number | null; pourcentage: number | null }>;
+    donneesAbsentes: string[];
+  } | null;
   totalEchantillons?: number;
   serieTronquee?: boolean;
   tours: Array<{ index: number; dateHeure: string | null; distanceMetres: number | null; dureeEcouleeSecondes: number | null; dureeActiveSecondes: number | null; frequenceCardiaqueMoyenne: number | null; frequenceCardiaqueMaximale: number | null; puissanceMoyenneWatts: number | null }>;

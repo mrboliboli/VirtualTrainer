@@ -21,6 +21,7 @@ public class SortieDetailService {
     public SortieDetailResponse get(UUID id) {
         try {
             SortieDetailResponse base = jdbc.queryForObject("SELECT a.id,a.source,a.fit_decode_status,a.fit_decode_error," +
+                    "a.perceived_exertion_rpe,a.garmin_feeling_score,a.subjective_feedback_source," +
                     "s.* FROM activity a LEFT JOIN activity_fit_summary s ON s.activity_id=a.id WHERE a.id=?",
                     (result, row) -> summary(result), id);
             List<SortieDetailResponse.TourResponse> laps = jdbc.query("SELECT * FROM activity_fit_lap WHERE activity_id=? " +
@@ -43,6 +44,12 @@ public class SortieDetailService {
                     id
             );
             long sampleCount = totalSamples == null ? 0 : totalSamples;
+            CompteRenduFactuelResponse report = CompteRenduFactuelCalculator.calculate(
+                    base.distanceMetres(), base.dureeActiveSecondes(), zones,
+                    samples.stream().map(sample -> new CompteRenduFactuelCalculator.Sample(
+                            sample.frequenceCardiaque(), sample.puissanceWatts(), sample.cadence()
+                    )).toList()
+            );
             return new SortieDetailResponse(base.id(), base.dateHeure(), base.sport(), base.sousSport(), base.source(),
                     base.etatDecodage(), base.erreurDecodage(), base.distanceMetres(), base.dureeEcouleeSecondes(),
                     base.dureeActiveSecondes(), base.vitesseMoyenneMetresParSeconde(), base.vitesseMaximaleMetresParSeconde(),
@@ -50,7 +57,8 @@ public class SortieDetailService {
                     base.cadenceMaximale(), base.puissanceMoyenneWatts(), base.puissanceMaximaleWatts(),
                     base.puissanceNormaliseeWatts(), base.calories(), base.denivelePositifMetres(),
                     base.deniveleNegatifMetres(), base.effetEntrainementAerobie(), base.effetEntrainementAnaerobie(),
-                    base.chargeEntrainement(), laps, zones, samples, sampleCount, sampleCount > samples.size());
+                    base.chargeEntrainement(), base.ressenti(), report,
+                    laps, zones, samples, sampleCount, sampleCount > samples.size());
         } catch (EmptyResultDataAccessException exception) {
             throw new SortieNotFoundException(id);
         }
@@ -65,7 +73,10 @@ public class SortieDetailService {
                 shortNumber(r, "average_cadence"), shortNumber(r, "maximum_cadence"), integer(r, "average_power"),
                 integer(r, "maximum_power"), integer(r, "normalized_power"), integer(r, "calories"),
                 integer(r, "ascent_meters"), integer(r, "descent_meters"), number(r, "aerobic_training_effect"),
-                number(r, "anaerobic_training_effect"), number(r, "training_load"), List.of(), List.of(), List.of(), 0, false);
+                number(r, "anaerobic_training_effect"), number(r, "training_load"),
+                new SortieDetailResponse.RessentiResponse(number(r, "perceived_exertion_rpe"),
+                        number(r, "garmin_feeling_score"), r.getString("subjective_feedback_source")),
+                null, List.of(), List.of(), List.of(), 0, false);
     }
     private static java.time.Instant instant(ResultSet r, String field) throws SQLException {
         java.sql.Timestamp value = r.getTimestamp(field); return value == null ? null : value.toInstant();
