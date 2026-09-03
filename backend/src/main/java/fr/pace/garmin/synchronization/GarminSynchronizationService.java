@@ -74,13 +74,18 @@ public class GarminSynchronizationService {
     @Transactional
     public void confirm(UUID id, String externalId) {
         ActivitySynchronization synchronization = get(id);
-        boolean isCandidate = synchronization.getCandidates()
+        SynchronizationCandidate candidate = synchronization.getCandidates()
                 .stream()
-                .anyMatch(candidate -> candidate.getExternalId().equals(externalId));
-        if (!isCandidate) throw new SynchronizationCandidateNotFoundException();
+                .filter(value -> value.getExternalId().equals(externalId))
+                .findFirst()
+                .orElseThrow(SynchronizationCandidateNotFoundException::new);
         if (activityRepository.findBySourceAndSourceExternalId("GARMIN_PERSONNEL", externalId).isPresent()) return;
 
-        ExternalActivityDetails details = client.getActivity(externalId);
+        ExternalActivityDetails details = client.getActivity(
+                externalId,
+                candidate.getStartedAt(),
+                candidate.getSport()
+        );
         byte[] fit = client.downloadFit(externalId);
         activityRepository.save(SynchronizedActivity.create(
                 externalId,

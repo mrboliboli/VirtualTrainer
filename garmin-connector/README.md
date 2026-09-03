@@ -63,6 +63,10 @@ docker build --platform linux/amd64 .
 docker build --platform linux/arm64 .
 ```
 
+`pytest` charge uniquement des secrets factices depuis `tests/conftest.py`. Aucun
+fichier `.env`, compte Garmin ou secret réel n'est nécessaire pour exécuter les
+tests.
+
 Les tests utilisent uniquement des doubles et des données anonymisées. Aucun test ne
 se connecte à Garmin. Avant toute mise à jour, auditer les versions exactes et leurs
 avis de sécurité. Les téléchargements de dépendances n'ont lieu qu'à la construction,

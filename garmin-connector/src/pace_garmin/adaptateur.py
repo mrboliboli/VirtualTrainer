@@ -151,6 +151,8 @@ class AdaptateurGarminLectureSeule:
             try:
                 contenu = client.download_activity(identifiant, dl_fmt=format_original)
                 return self._extraire_fit(contenu)
+            except CapaciteIndisponible:
+                raise
             except zipfile.BadZipFile as erreur:
                 raise CapaciteIndisponible(
                     "Garmin n'a pas retourné un fichier FIT exploitable"
@@ -210,17 +212,60 @@ class AdaptateurGarminLectureSeule:
             raise CapaciteIndisponible("Une activité Garmin ne contient aucun identifiant")
         return Activite(identifiant=str(identifiant), donnees=donnees)
 
-    @staticmethod
-    def _extraire_fit(contenu: bytes) -> bytes:
+    @classmethod
+    def _extraire_fit(cls, contenu: bytes) -> bytes:
+        if len(contenu) > cls.TAILLE_MAX_TELECHARGEMENT_OCTETS:
+            raise CapaciteIndisponible("Le téléchargement Garmin dépasse la taille autorisée")
         if contenu.startswith(b"PK"):
             with zipfile.ZipFile(io.BytesIO(contenu)) as archive:
-                noms = [nom for nom in archive.namelist() if nom.lower().endswith(".fit")]
-                if not noms:
+                entrees = archive.infolist()
+                if len(entrees) > cls.NOMBRE_MAX_ENTREES_ZIP:
+                    raise CapaciteIndisponible("L'archive Garmin contient trop d'entrées")
+                entrees_fit = [
+                    entree
+                    for entree in entrees
+                    if not entree.is_dir() and entree.filename.lower().endswith(".fit")
+                ]
+                if not entrees_fit:
                     raise CapaciteIndisponible("L'archive Garmin ne contient aucun fichier FIT")
-                return archive.read(noms[0])
+                if len(entrees_fit) != 1:
+                    raise CapaciteIndisponible("L'archive Garmin doit contenir un seul fichier FIT")
+                entree = entrees_fit[0]
+                cls._verifier_entree_fit(entree)
+                return cls._lire_entree_fit(archive, entree)
         if contenu[:1] == b"." or b".FIT" in contenu[:16].upper():
             return contenu
         raise CapaciteIndisponible("Le contenu Garmin n'est ni un FIT ni une archive FIT")
+
+    @classmethod
+    def _verifier_entree_fit(cls, entree: zipfile.ZipInfo) -> None:
+        if entree.flag_bits & 0x1:
+            raise CapaciteIndisponible("L'archive Garmin contient un fichier FIT chiffré")
+        if entree.compress_size > cls.TAILLE_MAX_ENTREE_COMPRESSEE_OCTETS:
+            raise CapaciteIndisponible("Le fichier FIT compressé dépasse la taille autorisée")
+        if entree.file_size > cls.TAILLE_MAX_FIT_DECOMPRESSE_OCTETS:
+            raise CapaciteIndisponible("Le fichier FIT décompressé dépasse la taille autorisée")
+        ratio = entree.file_size / max(entree.compress_size, 1)
+        if ratio > cls.RATIO_MAX_DECOMPRESSION:
+            raise CapaciteIndisponible("Le taux de compression de l'archive Garmin est anormal")
+
+    @classmethod
+    def _lire_entree_fit(
+        cls,
+        archive: zipfile.ZipFile,
+        entree: zipfile.ZipInfo,
+    ) -> bytes:
+        resultat = io.BytesIO()
+        taille = 0
+        with archive.open(entree, "r") as flux:
+            while bloc := flux.read(cls.TAILLE_BLOC_LECTURE_OCTETS):
+                taille += len(bloc)
+                if taille > cls.TAILLE_MAX_FIT_DECOMPRESSE_OCTETS:
+                    raise CapaciteIndisponible(
+                        "Le fichier FIT décompressé dépasse la taille autorisée"
+                    )
+                resultat.write(bloc)
+        return resultat.getvalue()
 
     @staticmethod
     def _convertir_erreur(erreur: Exception) -> None:
@@ -237,3 +282,9 @@ class AdaptateurGarminLectureSeule:
         raise CapaciteIndisponible("L'opération Garmin est actuellement indisponible") from erreur
 
     DUREE_MFA_SECONDES = 300
+    TAILLE_MAX_TELECHARGEMENT_OCTETS = 32 * 1024 * 1024
+    NOMBRE_MAX_ENTREES_ZIP = 16
+    TAILLE_MAX_ENTREE_COMPRESSEE_OCTETS = 32 * 1024 * 1024
+    TAILLE_MAX_FIT_DECOMPRESSE_OCTETS = 128 * 1024 * 1024
+    RATIO_MAX_DECOMPRESSION = 200
+    TAILLE_BLOC_LECTURE_OCTETS = 64 * 1024

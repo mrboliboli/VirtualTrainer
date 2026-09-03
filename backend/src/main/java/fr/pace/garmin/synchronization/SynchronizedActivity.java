@@ -42,4 +42,8 @@ public class SynchronizedActivity {
         activity.fitFingerprint = fingerprint;
         return activity;
     }
+
+    public UUID getId() { return id; }
+    public String getSource() { return source; }
+    public String getDetailsJson() { return detailsJson; }
 }

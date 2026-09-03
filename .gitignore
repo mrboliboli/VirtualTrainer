@@ -2,9 +2,10 @@
 backend/target/
 frontend/node_modules/
 frontend/dist/
+frontend/*.tsbuildinfo
 garmin-connector/.venv/
 garmin-connector/.mypy_cache/
 garmin-connector/.pytest_cache/
 garmin-connector/.ruff_cache/
-garmin-connector/__pycache__/
-
+**/__pycache__/
+*.py[cod]

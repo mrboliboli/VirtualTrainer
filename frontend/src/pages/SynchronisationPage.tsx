@@ -59,7 +59,12 @@ export function SynchronisationPage() {
 
   const synchroniser = async () => {
     setActionEnCours(true); setErreur(''); setConfirmation('');
-    try { const resultat = await api.lancerSynchronisationGarmin(); setSynchronisation(resultat); if (resultat.statut === 'EN_COURS') await suivre(resultat.id); }
+    try {
+      const resultat = await api.lancerSynchronisationGarmin();
+      setSynchronisation(resultat);
+      if (resultat.statut === 'EN_COURS') await suivre(resultat.id);
+      if (resultat.statut.startsWith('ERREUR')) setErreur(resultat.messageUtilisateur ?? 'La recherche Garmin n’a pas abouti. Réessaie dans un instant.');
+    }
     catch (e) { setErreur((e as Error).message); }
     finally { setActionEnCours(false); }
   };

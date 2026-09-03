@@ -4,6 +4,7 @@ import fr.pace.activity.ActivitySourceStatus;
 import fr.pace.activity.ExternalActivityDetails;
 import fr.pace.activity.ExternalActivitySummary;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -14,7 +15,7 @@ public interface GarminActivityClient {
     GarminSession sessionStatus(String correlationId);
     ActivitySourceStatus connectionStatus();
     List<ExternalActivitySummary> pullActivities(LocalDate from, LocalDate to, int limit, String correlationId);
-    ExternalActivityDetails getActivity(String garminActivityId);
+    ExternalActivityDetails getActivity(String garminActivityId, Instant startedAt, String sport);
     byte[] downloadFit(String garminActivityId);
     void disconnect();
 }

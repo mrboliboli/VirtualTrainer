@@ -51,11 +51,44 @@ export interface SeancePlanifiee {
 
 export interface ActiviteRecente {
   id: string;
-  dateHeure: string;
-  sport: string;
-  distanceMetres?: number;
-  dureeSecondes?: number;
-  rapportDisponible: boolean;
+  dateHeure: string | null;
+  sport: string | null;
+  distanceMetres: number | null;
+  dureeSecondes: number | null;
+  source: string;
+}
+
+export interface DetailSortie {
+  id: string;
+  dateHeure: string | null;
+  sport: string | null;
+  source: string;
+  sousSport: string | null;
+  etatDecodage: 'A_DECODER' | 'EN_COURS' | 'DECODEE' | 'ERREUR';
+  erreurDecodage: string | null;
+  distanceMetres: number | null;
+  dureeEcouleeSecondes: number | null;
+  dureeActiveSecondes: number | null;
+  vitesseMoyenneMetresParSeconde: number | null;
+  vitesseMaximaleMetresParSeconde: number | null;
+  frequenceCardiaqueMoyenne: number | null;
+  frequenceCardiaqueMaximale: number | null;
+  cadenceMoyenne: number | null;
+  cadenceMaximale: number | null;
+  puissanceMoyenneWatts: number | null;
+  puissanceMaximaleWatts: number | null;
+  puissanceNormaliseeWatts: number | null;
+  calories: number | null;
+  denivelePositifMetres: number | null;
+  deniveleNegatifMetres: number | null;
+  effetEntrainementAerobie: number | null;
+  effetEntrainementAnaerobie: number | null;
+  chargeEntrainement: number | null;
+  totalEchantillons?: number;
+  serieTronquee?: boolean;
+  tours: Array<{ index: number; dateHeure: string | null; distanceMetres: number | null; dureeEcouleeSecondes: number | null; dureeActiveSecondes: number | null; frequenceCardiaqueMoyenne: number | null; frequenceCardiaqueMaximale: number | null; puissanceMoyenneWatts: number | null }>;
+  zones: Array<{ type: string; index: number; borneBasse: number | null; borneHaute: number | null; dureeSecondes: number | null }>;
+  serie: Array<{ dateHeure: string | null; frequenceCardiaque: number | null; puissanceWatts: number | null; cadence: number | null; altitudeMetres: number | null }>;
 }
 
 export interface TableauDeBord {

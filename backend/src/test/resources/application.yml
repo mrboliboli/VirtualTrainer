@@ -9,5 +9,7 @@ spring:
   flyway:
     enabled: false
 pace:
+  fit:
+    enabled: false
   access:
     enabled: false

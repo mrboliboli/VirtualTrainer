@@ -18,8 +18,8 @@ export function TableauDeBordPage({ naviguer }: { naviguer: (page: Page) => void
 
   const charger = () => {
     setChargement(true); setErreur('');
-    Promise.all([api.profilOuAbsent(), api.objectifs()])
-      .then(([profil, objectifs]) => setDonnees({ profil, objectifPrincipal: objectifs.find((objectif) => objectif.principal), activitesRecentes: [], alertes: [] }))
+    Promise.all([api.profilOuAbsent(), api.objectifs(), api.sorties(3)])
+      .then(([profil, objectifs, activitesRecentes]) => setDonnees({ profil, objectifPrincipal: objectifs.find((objectif) => objectif.principal), activitesRecentes, alertes: [] }))
       .catch((e: Error) => setErreur(e.message)).finally(() => setChargement(false));
   };
   useEffect(charger, []);
@@ -37,6 +37,6 @@ export function TableauDeBordPage({ naviguer }: { naviguer: (page: Page) => void
       <p className="surtitre">Prochaine séance</p>
       {seance ? <><h2>{seance.titre}</h2><p className="date-seance">{new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(`${seance.datePrevue}T12:00:00`))}</p><div className="mesures"><span><b>{seance.dureeMinutes ?? '—'}</b> min</span><span><b>{seance.intensite}</b> intensité</span></div>{seance.explicationCoach && <p>{seance.explicationCoach}</p>}<button className="bouton bouton--large" onClick={() => naviguer('synchroniser')}>Entraînement effectué</button></> : <><h2>Pas encore de séance</h2><p>Une séance te sera proposée après la définition de ton objectif.</p></>}
     </section>
-    <section className="carte"><div className="titre-ligne"><h2>Dernières sorties</h2><button className="lien-action" onClick={() => naviguer('sorties')}>Tout voir</button></div>{donnees.activitesRecentes.length === 0 ? <p className="texte-discret">Tes activités Garmin apparaîtront ici après leur synchronisation.</p> : <ul className="liste-simple">{donnees.activitesRecentes.slice(0, 3).map((activite) => <li key={activite.id}><div><strong>{activite.sport}</strong><small>{new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(activite.dateHeure))}</small></div><span>{activite.distanceMetres ? `${(activite.distanceMetres / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} km` : 'Distance absente'}</span></li>)}</ul>}</section>
+    <section className="carte"><div className="titre-ligne"><h2>Dernières sorties</h2><button className="lien-action" onClick={() => naviguer('sorties')}>Tout voir</button></div>{donnees.activitesRecentes.length === 0 ? <p className="texte-discret">Tes activités Garmin apparaîtront ici après leur synchronisation.</p> : <ul className="liste-simple">{donnees.activitesRecentes.slice(0, 3).map((activite) => <li key={activite.id}><div><strong>{activite.sport ?? 'Activité Garmin'}</strong><small>{activite.dateHeure ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(activite.dateHeure)) : 'Date indisponible'}</small></div><span>{activite.distanceMetres !== null ? `${(activite.distanceMetres / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} km` : 'Distance indisponible'}</span></li>)}</ul>}</section>
   </div>;
 }

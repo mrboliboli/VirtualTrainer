@@ -9,7 +9,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
+import java.net.http.HttpClient;
 import java.time.Duration;
+import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -20,6 +22,99 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 
 class HttpGarminActivityClientTest {
+    @Test
+    @DisplayName("Devrait imposer HTTP 1.1 pour communiquer avec le connecteur Garmin")
+    void configuredHttpClient_shouldUseHttp11_whenCallingGarminConnector() {
+        // WHEN
+        HttpClient httpClient = HttpGarminActivityClient.configuredHttpClient(properties());
+
+        // THEN
+        assertThat(httpClient.version()).isEqualTo(HttpClient.Version.HTTP_1_1);
+        assertThat(httpClient.connectTimeout()).contains(Duration.ofSeconds(1));
+    }
+
+    @Test
+    @DisplayName("Devrait accepter le format de date réel de Garmin et ignorer un résumé isolé invalide")
+    void pullActivities_shouldKeepValidActivities_whenGarminUsesSpaceSeparatedDate() {
+        // GIVEN
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        server.expect(requestTo(
+                        "http://connecteur/interne/v1/activites?limite=20&debut=2026-08-18&fin=2026-08-21"
+                ))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("""
+                                {"activites":[
+                                  {"identifiant":"123","donnees":{"startTimeGMT":"2026-08-20 06:30:00",
+                                  "activityType":{"typeKey":"running"},"distance":10000,"duration":3600}},
+                                  {"identifiant":"invalide","donnees":{"startTimeGMT":"date-invalide"}}
+                                ],"limite":20}
+                                """));
+        HttpGarminActivityClient client = new HttpGarminActivityClient(builder, properties(), new ObjectMapper());
+
+        // WHEN
+        var result = client.pullActivities(
+                java.time.LocalDate.parse("2026-08-18"),
+                java.time.LocalDate.parse("2026-08-21"),
+                20,
+                "correlation-test"
+        );
+
+        // THEN
+        assertThat(result).singleElement().satisfies(activity -> {
+            assertThat(activity.sourceActivityId()).isEqualTo("123");
+            assertThat(activity.startedAt()).isEqualTo(Instant.parse("2026-08-20T06:30:00Z"));
+            assertThat(activity.sport()).isEqualTo("running");
+        });
+        server.verify();
+    }
+
+    @Test
+    @DisplayName("Devrait conserver la date candidate quand le détail Garmin place son résumé dans un sous-objet")
+    void getActivity_shouldUseCandidateMetadata_whenGarminDetailUsesSummaryDto() {
+        // GIVEN
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        server.expect(requestTo("http://connecteur/interne/v1/activites/123"))
+                .andRespond(withStatus(HttpStatus.OK)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body("""
+                                {"identifiant":"123","donnees":{"activityId":123,
+                                "activityTypeDTO":{"typeKey":"running"},
+                                "summaryDTO":{"startTimeGMT":"2026-08-20 06:30:00"}}}
+                                """));
+        HttpGarminActivityClient client = new HttpGarminActivityClient(builder, properties(), new ObjectMapper());
+        Instant candidateDate = Instant.parse("2026-08-20T06:30:00Z");
+
+        // WHEN
+        var result = client.getActivity("123", candidateDate, "running");
+
+        // THEN
+        assertThat(result.sourceActivityId()).isEqualTo("123");
+        assertThat(result.startedAt()).isEqualTo(candidateDate);
+        assertThat(result.sport()).isEqualTo("running");
+        assertThat(result.availableMetrics()).containsKey("summaryDTO");
+        server.verify();
+    }
+
+    @Test
+    @DisplayName("Devrait refuser un FIT qui dépasse dix mégaoctets")
+    void downloadFit_shouldRejectResponse_whenPayloadIsTooLarge() {
+        // GIVEN
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        server.expect(requestTo("http://connecteur/interne/v1/activites/123/fit"))
+                .andRespond(withStatus(HttpStatus.OK).body(new byte[10 * 1024 * 1024 + 1]));
+        HttpGarminActivityClient client = new HttpGarminActivityClient(builder, properties(), new ObjectMapper());
+
+        // WHEN / THEN
+        assertThatThrownBy(() -> client.downloadFit("123"))
+                .isInstanceOf(PermanentGarminConnectorException.class)
+                .hasMessageContaining("taille autorisée");
+        server.verify();
+    }
+
     @Test
     @DisplayName("Devrait traduire la réponse MFA en respectant le contrat interne")
     void connect_shouldMapMfaResponse_whenConnectorReturnsAccepted() {

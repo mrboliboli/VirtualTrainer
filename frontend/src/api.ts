@@ -1,4 +1,4 @@
-import type { ConnexionGarmin, Objectif, ProfilAthlete, SynchronisationGarmin } from './types';
+import type { ActiviteRecente, ConnexionGarmin, DetailSortie, Objectif, ProfilAthlete, SynchronisationGarmin } from './types';
 
 const BASE_API = import.meta.env.VITE_API_URL ?? '/api/v1';
 
@@ -50,6 +50,8 @@ export const api = {
     requete<Objectif>('/objectifs', { method: 'POST', body: JSON.stringify(objectif) }),
   archiverObjectif: (id: string) => requete<void>(`/objectifs/${encodeURIComponent(id)}/archivage`, { method: 'POST' }),
   supprimerObjectif: (id: string) => requete<void>(`/objectifs/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  sorties: (limite = 20) => requete<ActiviteRecente[]>(`/sorties?limite=${Math.min(100, Math.max(1, limite))}`),
+  detailSortie: (id: string) => requete<DetailSortie>(`/sorties/${encodeURIComponent(id)}`),
   connexionGarmin: () => requete<ConnexionGarmin>('/garmin/connexion'),
   connecterGarmin: (identifiant: string, motDePasse: string) => requete<ConnexionGarmin>('/garmin/connexion', { method: 'POST', body: JSON.stringify({ identifiant, motDePasse, consentementRisques: true }) }),
   confirmerMfaGarmin: (defiMfaId: string, code: string) => requete<ConnexionGarmin>('/garmin/connexion/mfa', { method: 'POST', body: JSON.stringify({ defiMfaId, code }) }),

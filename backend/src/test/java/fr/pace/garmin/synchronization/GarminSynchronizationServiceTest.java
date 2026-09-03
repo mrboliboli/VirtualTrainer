@@ -2,6 +2,7 @@ package fr.pace.garmin.synchronization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.pace.activity.ExternalActivitySummary;
+import fr.pace.activity.ExternalActivityDetails;
 import fr.pace.garmin.GarminActivityClient;
 import fr.pace.garmin.GarminConnectionExpiredException;
 import fr.pace.garmin.PermanentGarminConnectorException;
@@ -120,12 +121,40 @@ class GarminSynchronizationServiceTest {
                 .isEqualTo(CandidateConfidence.LOW);
     }
 
+    @Test
+    @DisplayName("Devrait confirmer avec la date et le sport de la candidate puis persister le FIT")
+    void confirm_shouldPersistFitAndCandidateMetadata_whenDetailHasNoRootDate() {
+        // GIVEN
+        ActivitySynchronization synchronization = ActivitySynchronization.create("confirmation", NOW);
+        synchronization.complete(
+                List.of(SynchronizationCandidate.create(
+                        synchronization,
+                        new ExternalActivitySummary("123", NOW, "running", 10_000L, 3_600L)
+                )),
+                NOW
+        );
+        when(synchronizationRepository.findById(synchronization.getId())).thenReturn(Optional.of(synchronization));
+        when(activityRepository.findBySourceAndSourceExternalId("GARMIN_PERSONNEL", "123"))
+                .thenReturn(Optional.empty());
+        when(client.getActivity("123", NOW, "running"))
+                .thenReturn(new ExternalActivityDetails("123", NOW, "running", java.util.Map.of("summaryDTO", java.util.Map.of())));
+        when(client.downloadFit("123")).thenReturn(new byte[]{1, 2, 3});
+
+        // WHEN
+        service().confirm(synchronization.getId(), "123");
+
+        // THEN
+        verify(client).getActivity("123", NOW, "running");
+        verify(client).downloadFit("123");
+        verify(activityRepository).save(any(SynchronizedActivity.class));
+    }
+
     private GarminSynchronizationService service() {
         return new GarminSynchronizationService(
                 synchronizationRepository,
                 activityRepository,
                 client,
-                new ObjectMapper(),
+                new ObjectMapper().findAndRegisterModules(),
                 Clock.fixed(NOW, ZoneOffset.UTC)
         );
     }

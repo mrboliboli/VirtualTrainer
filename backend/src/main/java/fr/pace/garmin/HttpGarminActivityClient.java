@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.pace.activity.ActivitySourceStatus;
 import fr.pace.activity.ExternalActivityDetails;
 import fr.pace.activity.ExternalActivitySummary;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -21,9 +23,12 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 @Component
 public class HttpGarminActivityClient implements GarminActivityClient {
+    private static final int MAX_FIT_BYTES = 10 * 1024 * 1024;
+    private static final Logger LOGGER = LoggerFactory.getLogger(HttpGarminActivityClient.class);
     private static final String SERVICE_KEY_HEADER = "X-Cle-Service";
     private static final String CORRELATION_HEADER = "X-Correlation-Id";
 
@@ -52,12 +57,17 @@ public class HttpGarminActivityClient implements GarminActivityClient {
     }
 
     private static RestClient.Builder configuredBuilder(GarminConnectorProperties properties) {
-        HttpClient httpClient = HttpClient.newBuilder()
-                .connectTimeout(properties.connectionTimeout())
-                .build();
+        HttpClient httpClient = configuredHttpClient(properties);
         JdkClientHttpRequestFactory requestFactory = new JdkClientHttpRequestFactory(httpClient);
         requestFactory.setReadTimeout(properties.readTimeout());
         return RestClient.builder().requestFactory(requestFactory);
+    }
+
+    static HttpClient configuredHttpClient(GarminConnectorProperties properties) {
+        return HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(properties.connectionTimeout())
+                .build();
     }
 
     @Override
@@ -127,11 +137,14 @@ public class HttpGarminActivityClient implements GarminActivityClient {
                 .header(CORRELATION_HEADER, correlationId)
                 .retrieve()
                 .body(ActivityListResponse.class));
-        return response == null ? List.of() : response.activities().stream().map(this::toSummary).toList();
+        return response == null ? List.of() : response.activities()
+                .stream()
+                .flatMap(this::toValidSummary)
+                .toList();
     }
 
     @Override
-    public ExternalActivityDetails getActivity(String garminActivityId) {
+    public ExternalActivityDetails getActivity(String garminActivityId, Instant startedAt, String sport) {
         ActivityResponse response = call(() -> restClient.get()
                 .uri("/interne/v1/activites/{id}", garminActivityId)
                 .retrieve()
@@ -139,8 +152,8 @@ public class HttpGarminActivityClient implements GarminActivityClient {
         if (response == null) throw new TemporaryGarminConnectorException("La réponse Garmin est vide.");
         return new ExternalActivityDetails(
                 response.identifier(),
-                instant(response.data()),
-                text(response.data(), "activityType", "typeKey", "sport"),
+                startedAt,
+                sport,
                 objectMapper.convertValue(response.data(), Map.class)
         );
     }
@@ -150,8 +163,17 @@ public class HttpGarminActivityClient implements GarminActivityClient {
         return call(() -> restClient.get()
                 .uri("/interne/v1/activites/{id}/fit", garminActivityId)
                 .accept(MediaType.parseMediaType("application/vnd.ant.fit"))
-                .retrieve()
-                .body(byte[].class));
+                .exchange((request, response) -> {
+                    if (response.getStatusCode().isError()) {
+                        ConnectorError error = objectMapper.readValue(response.getBody(), ConnectorError.class);
+                        throw mapError(response.getStatusCode(), error);
+                    }
+                    byte[] content = response.getBody().readNBytes(MAX_FIT_BYTES + 1);
+                    if (content.length > MAX_FIT_BYTES) {
+                        throw new PermanentGarminConnectorException("Le fichier FIT dépasse la taille autorisée.");
+                    }
+                    return content;
+                }));
     }
 
     @Override
@@ -170,11 +192,27 @@ public class HttpGarminActivityClient implements GarminActivityClient {
         );
     }
 
+    private Stream<ExternalActivitySummary> toValidSummary(ActivityResponse response) {
+        try {
+            return Stream.of(toSummary(response));
+        } catch (PermanentGarminConnectorException exception) {
+            LOGGER.warn(
+                    "Une activité Garmin a été ignorée car son résumé est invalide : {}",
+                    exception.getMessage()
+            );
+            return Stream.empty();
+        }
+    }
+
     private Instant instant(JsonNode data) {
         String value = text(data, "startTimeGMT", "startTimeLocal", "dateHeure");
-        if (value == null) return Instant.EPOCH;
+        if (value == null && data.path("beginTimestamp").canConvertToLong()) {
+            return Instant.ofEpochMilli(data.path("beginTimestamp").longValue());
+        }
+        if (value == null) throw new PermanentGarminConnectorException("La date de l'activité Garmin est absente.");
         try {
-            return Instant.parse(value.endsWith("Z") ? value : value + "Z");
+            String normalized = value.trim().replace(' ', 'T');
+            return Instant.parse(normalized.endsWith("Z") ? normalized : normalized + "Z");
         } catch (RuntimeException exception) {
             throw new PermanentGarminConnectorException("La date de l'activité Garmin est invalide.");
         }

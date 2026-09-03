@@ -43,4 +43,18 @@ describe('client API', () => {
     await api.confirmerCandidateGarmin('sync 1', 'activité/2');
     expect(fetch).toHaveBeenCalledWith('/api/v1/garmin/synchronisations/sync%201/confirmation', expect.objectContaining({ method: 'POST', body: JSON.stringify({ idExterne: 'activité/2' }) }));
   });
+
+  it('borne la limite des sorties et utilise la route publique réelle', async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response('[]', { status: 200 }));
+    vi.stubGlobal('fetch', fetch);
+    await api.sorties(200);
+    expect(fetch).toHaveBeenCalledWith('/api/v1/sorties?limite=100', expect.any(Object));
+  });
+
+  it('encode l’identifiant pour charger le détail factuel d’une sortie', async () => {
+    const fetch = vi.fn().mockResolvedValue(new Response(JSON.stringify({ id: 'sortie 1', etatDecodage: 'EN_COURS', tours: [], zones: [], serie: [] }), { status: 200 }));
+    vi.stubGlobal('fetch', fetch);
+    await api.detailSortie('sortie 1');
+    expect(fetch).toHaveBeenCalledWith('/api/v1/sorties/sortie%201', expect.any(Object));
+  });
 });

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import base64
 import hmac
 import logging
@@ -8,8 +6,10 @@ import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from datetime import date
+from typing import Annotated
 
-from fastapi import Depends, FastAPI, Header, Query, Request, Response
+from fastapi import Body, Depends, FastAPI, Header, Query, Request, Response
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
@@ -120,6 +120,23 @@ async def traiter_limite(request: Request, _: RateLimitExceeded) -> JSONResponse
     return JSONResponse(status_code=429, content=corps.model_dump())
 
 
+@app.exception_handler(RequestValidationError)
+async def traiter_validation(request: Request, erreur: RequestValidationError) -> JSONResponse:
+    details = sorted(
+        {
+            f"{'.'.join(str(element) for element in entree['loc'])} ({entree['type']})"
+            for entree in erreur.errors()
+        }
+    )
+    corps = ErreurApi(
+        code="REQUETE_INVALIDE",
+        type="VALIDATION",
+        message=f"Requête invalide : {', '.join(details)}",
+        correlation_id=request.state.correlation_id,
+    )
+    return JSONResponse(status_code=422, content=corps.model_dump())
+
+
 @app.get("/interne/v1/sante", response_model=Sante)
 def sante() -> Sante:
     return Sante(connecteur_actif=configuration.connecteur_actif)
@@ -140,7 +157,10 @@ def etat_session() -> ReponseSession:
     dependencies=[Depends(verifier_service)],
 )
 @limiteur.limit(lambda: f"{configuration.requetes_par_minute}/minute")
-def connexion(request: Request, demande: DemandeConnexion) -> ReponseSession:
+def connexion(
+    request: Request,
+    demande: Annotated[DemandeConnexion, Body()],
+) -> ReponseSession:
     del request
     etat = adaptateur.commencer_connexion(
         demande.courriel,
@@ -155,7 +175,10 @@ def connexion(request: Request, demande: DemandeConnexion) -> ReponseSession:
     dependencies=[Depends(verifier_service)],
 )
 @limiteur.limit(lambda: f"{configuration.requetes_par_minute}/minute")
-def mfa(request: Request, demande: DemandeMfa) -> ReponseSession:
+def mfa(
+    request: Request,
+    demande: Annotated[DemandeMfa, Body()],
+) -> ReponseSession:
     del request
     etat = adaptateur.terminer_mfa(demande.code.get_secret_value())
     return ReponseSession(etat=etat, message="Double authentification terminée")

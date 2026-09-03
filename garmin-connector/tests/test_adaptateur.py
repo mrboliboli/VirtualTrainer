@@ -7,6 +7,7 @@ import pytest
 
 from pace_garmin.adaptateur import AdaptateurGarminLectureSeule
 from pace_garmin.erreurs import (
+    CapaciteIndisponible,
     LimiteFrequenceAtteinte,
     MfaRequise,
     ProtectionGarminDetectee,
@@ -179,3 +180,86 @@ def test_fit_devrait_extraire_fit_quand_garmin_retourne_archive():
 
     # ALORS
     assert contenu == b".FIT donnees anonymes"
+
+
+def _archive(**fichiers: bytes) -> bytes:
+    tampon = io.BytesIO()
+    with zipfile.ZipFile(tampon, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for nom, contenu in fichiers.items():
+            archive.writestr(nom, contenu)
+    return tampon.getvalue()
+
+
+def test_extraire_fit_devrait_refuser_quand_telechargement_depasse_limite(monkeypatch):
+    # ÉTANT DONNÉ
+    monkeypatch.setattr(AdaptateurGarminLectureSeule, "TAILLE_MAX_TELECHARGEMENT_OCTETS", 8)
+
+    # QUAND / ALORS
+    with pytest.raises(CapaciteIndisponible, match="téléchargement"):
+        AdaptateurGarminLectureSeule._extraire_fit(b".FIT trop long")
+
+
+def test_extraire_fit_devrait_refuser_quand_archive_contient_plusieurs_fit():
+    # ÉTANT DONNÉ
+    contenu = _archive(**{"premier.fit": b".FIT 1", "second.fit": b".FIT 2"})
+
+    # QUAND / ALORS
+    with pytest.raises(CapaciteIndisponible, match="un seul fichier FIT"):
+        AdaptateurGarminLectureSeule._extraire_fit(contenu)
+
+
+def test_extraire_fit_devrait_refuser_quand_archive_contient_trop_entrees(monkeypatch):
+    # ÉTANT DONNÉ
+    monkeypatch.setattr(AdaptateurGarminLectureSeule, "NOMBRE_MAX_ENTREES_ZIP", 1)
+    contenu = _archive(**{"course.fit": b".FIT", "note.txt": b"anonyme"})
+
+    # QUAND / ALORS
+    with pytest.raises(CapaciteIndisponible, match="trop d'entrées"):
+        AdaptateurGarminLectureSeule._extraire_fit(contenu)
+
+
+def test_extraire_fit_devrait_refuser_quand_taille_decompressee_depasse_limite(monkeypatch):
+    # ÉTANT DONNÉ
+    monkeypatch.setattr(AdaptateurGarminLectureSeule, "TAILLE_MAX_FIT_DECOMPRESSE_OCTETS", 8)
+    contenu = _archive(**{"course.fit": b".FIT donnees trop longues"})
+
+    # QUAND / ALORS
+    with pytest.raises(CapaciteIndisponible, match="décompressé dépasse"):
+        AdaptateurGarminLectureSeule._extraire_fit(contenu)
+
+
+def test_extraire_fit_devrait_refuser_quand_taille_compressee_depasse_limite(monkeypatch):
+    # ÉTANT DONNÉ
+    monkeypatch.setattr(
+        AdaptateurGarminLectureSeule,
+        "TAILLE_MAX_ENTREE_COMPRESSEE_OCTETS",
+        1,
+    )
+    contenu = _archive(**{"course.fit": b".FIT donnees anonymes"})
+
+    # QUAND / ALORS
+    with pytest.raises(CapaciteIndisponible, match="compressé dépasse"):
+        AdaptateurGarminLectureSeule._extraire_fit(contenu)
+
+
+def test_extraire_fit_devrait_refuser_quand_ratio_decompression_est_anormal(monkeypatch):
+    # ÉTANT DONNÉ
+    monkeypatch.setattr(AdaptateurGarminLectureSeule, "RATIO_MAX_DECOMPRESSION", 2)
+    contenu = _archive(**{"course.fit": b".FIT" + b"0" * 1_000})
+
+    # QUAND / ALORS
+    with pytest.raises(CapaciteIndisponible, match="taux de compression"):
+        AdaptateurGarminLectureSeule._extraire_fit(contenu)
+
+
+def test_extraire_fit_devrait_lire_par_bloc_quand_archive_valide(monkeypatch):
+    # ÉTANT DONNÉ
+    monkeypatch.setattr(AdaptateurGarminLectureSeule, "TAILLE_BLOC_LECTURE_OCTETS", 4)
+    attendu = b".FIT donnees anonymes en plusieurs blocs"
+    contenu = _archive(**{"course.fit": attendu})
+
+    # QUAND
+    resultat = AdaptateurGarminLectureSeule._extraire_fit(contenu)
+
+    # ALORS
+    assert resultat == attendu

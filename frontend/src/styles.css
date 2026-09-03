@@ -102,6 +102,14 @@ fieldset { margin: 16px 0; padding: 0; border: 0; }
 .avertissement p:last-child { margin-bottom: 0; }
 .case--consentement { align-items: flex-start; font-weight: 500; }
 .carte--candidate p { margin-bottom: 0; color: var(--texte-secondaire); }
+.grille-mesures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 16px 0 0; }
+.mesure-factuelle { min-width: 0; padding: 12px; border-radius: 10px; background: var(--surface-secondaire); }
+.mesure-factuelle dt { color: var(--texte-secondaire); font-size: .75rem; }
+.mesure-factuelle dd { margin: 4px 0 0; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.mesure-factuelle--absente dd { color: var(--texte-secondaire); font-weight: 500; }
+.tableau-defilant { max-width: 100%; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+th, td { padding: 10px 12px; border-bottom: 1px solid var(--bordure); text-align: left; white-space: nowrap; }
 .carte--synchronisation { text-align: center; }
 .illustration-synchro { display: grid; place-items: center; width: 72px; height: 72px; margin: 0 auto 16px; border-radius: 50%; background: rgb(21 94 117 / 12%); color: var(--information); font-size: 2rem; }
 .visuellement-cache { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }

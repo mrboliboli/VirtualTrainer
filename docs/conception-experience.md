@@ -104,7 +104,16 @@ Ne jamais associer silencieusement une activité si la confiance est insuffisant
 
 ### Ressenti
 
-Ordre : ressenti global, RPE sur 10, douleur, sommeil, météo ressentie, hydratation, commentaire. Le ressenti global et le RPE peuvent être requis ; tous les autres champs sont facultatifs. Utiliser des choix tactiles rapides, complétés par du texte visible, sans dépendre de la seule couleur ou d’émojis.
+Pace réutilise en priorité le ressenti global et le RPE déjà saisis dans Garmin et
+les affiche avec leur provenance. Il ne demande pas de ressaisir une information
+déjà disponible. Si Garmin ne fournit aucune de ces valeurs, l'analyse reste
+accessible et signale simplement leur absence. Une saisie ou une correction dans
+Pace peut être proposée en action secondaire, jamais comme une étape obligatoire.
+
+Pour cette saisie facultative, l'ordre reste : ressenti global, RPE sur 10, douleur,
+sommeil, météo ressentie, hydratation, commentaire. Utiliser des choix tactiles
+rapides, complétés par du texte visible, sans dépendre de la seule couleur ou
+d'émojis.
 
 ### Reporter une séance
 
