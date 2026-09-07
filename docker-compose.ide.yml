@@ -1,0 +1,15 @@
+services:
+  base-de-donnees:
+    ports:
+      - "127.0.0.1:${PACE_IDE_DATABASE_PORT:-5432}:5432"
+    networks:
+      - developpement-ide
+
+  connecteur-garmin:
+    ports:
+      - "127.0.0.1:${PACE_IDE_CONNECTOR_PORT:-8081}:8081"
+    networks:
+      - developpement-ide
+
+networks:
+  developpement-ide:

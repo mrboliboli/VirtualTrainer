@@ -1,4 +1,42 @@
-# Lancer Pace depuis VS Code avec Docker
+# Lancer Pace depuis VS Code
+
+## Mode recommandé pour déboguer Java
+
+Ce mode lance uniquement PostgreSQL et le connecteur Garmin dans Docker. Le backend
+Spring Boot s'exécute directement dans VS Code : les points d'arrêt, l'inspection des
+variables et le pas-à-pas Java fonctionnent normalement.
+
+1. Démarrer Docker Desktop.
+2. Ouvrir le dossier racine `VirtualTrainer` dans VS Code.
+3. Préparer `.env` comme indiqué ci-dessous.
+4. Ouvrir **Exécuter et déboguer** (`⇧⌘D`).
+5. Choisir **Pace : backend Java (debug)**.
+6. Appuyer sur `F5`.
+
+La configuration lance automatiquement la tâche **IDE : démarrer PostgreSQL et
+Garmin**, attend que les deux conteneurs soient sains, puis démarre
+`fr.pace.PaceApplication` avec le profil Spring `ide`.
+
+Pour utiliser l'interface web pendant le débogage, lancer ensuite depuis la palette
+de commandes la tâche **IDE : démarrer le frontend Vite**, puis ouvrir
+[http://localhost:5173](http://localhost:5173). Vite transmet `/api` au backend Java
+sur `127.0.0.1:8080`.
+
+Dans ce mode :
+
+- PostgreSQL écoute uniquement sur `127.0.0.1:5432` ;
+- le connecteur Garmin écoute uniquement sur `127.0.0.1:8081` ;
+- le backend Java écoute sur `127.0.0.1:8080` ;
+- le frontal de production Nginx et le backend Docker ne sont pas lancés.
+
+Les ports de la base et du connecteur peuvent être changés avec
+`PACE_IDE_DATABASE_PORT` et `PACE_IDE_CONNECTOR_PORT` dans `.env`.
+
+Pour arrêter les dépendances sans effacer les données, exécuter la tâche
+**IDE : arrêter PostgreSQL et Garmin**. Les volumes PostgreSQL et Garmin sont les
+mêmes qu'en mode Docker complet.
+
+## Mode application complète dans Docker
 
 ## Prérequis
 

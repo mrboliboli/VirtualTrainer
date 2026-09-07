@@ -1,0 +1,21 @@
+spring:
+  config:
+    activate:
+      on-profile: ide
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:${PACE_IDE_DATABASE_PORT:5432}/pace
+    username: pace
+    password: ${PACE_DATABASE_PASSWORD}
+
+server:
+  address: 127.0.0.1
+
+pace:
+  access:
+    # Le frontal Vite appelle directement le backend local. Ne jamais utiliser ce
+    # profil lorsque le backend écoute sur une interface autre que 127.0.0.1.
+    enabled: false
+  garmin:
+    connector:
+      base-url: http://127.0.0.1:${PACE_IDE_CONNECTOR_PORT:8081}
+      token: ${PACE_CONNECTOR_API_TOKEN}

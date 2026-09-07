@@ -1,0 +1,18 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Pace : backend Java (debug)",
+      "request": "launch",
+      "mainClass": "fr.pace.PaceApplication",
+      "cwd": "${workspaceFolder}/backend",
+      "envFile": "${workspaceFolder}/.env",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "ide",
+        "PACE_BACKEND_PORT": "8080"
+      },
+      "preLaunchTask": "IDE : démarrer PostgreSQL et Garmin"
+    }
+  ]
+}
