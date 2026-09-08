@@ -16,5 +16,6 @@ public record AiSettingsRequest(
         @Size(max = 100) String modelePlanification,
         @DecimalMin("0.0") @DecimalMax("2.0") double temperature,
         @Min(128) @Max(16384) int jetonsMaximum,
-        @Size(max = 4000) String instructionsPersonnalisees
+        @Size(max = 4000) String instructionsPersonnalisees,
+        boolean generationSeanceApresImport
 ) { }

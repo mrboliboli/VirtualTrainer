@@ -19,6 +19,7 @@ public class AiConfiguration {
     @Column(name = "custom_instructions", length = 4000) private String customInstructions;
     @Column(name = "last_test_status", length = 30) private String lastTestStatus;
     @Column(name = "last_tested_at") private Instant lastTestedAt;
+    @Column(name = "auto_generate_workout_after_import", nullable = false) private Boolean autoGenerateWorkoutAfterImport = false;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
 
@@ -46,6 +47,9 @@ public class AiConfiguration {
         if (status == null || status.isBlank() || status.length() > 30) throw new IllegalArgumentException("Statut de test invalide");
         lastTestStatus = status; lastTestedAt = now; updatedAt = now;
     }
+    public void configureWorkoutAutomation(boolean enabled, Instant now) {
+        autoGenerateWorkoutAfterImport = enabled; updatedAt = now;
+    }
 
     private static void validate(String provider, String baseUrl, String analysisModel, String planningModel,
                                  double temperature, int maxOutputTokens, String instructions) {
@@ -62,4 +66,5 @@ public class AiConfiguration {
     public String getPlanningModel() { return planningModel; } public Double getTemperature() { return temperature; }
     public Integer getMaxOutputTokens() { return maxOutputTokens; } public String getCustomInstructions() { return customInstructions; }
     public String getLastTestStatus() { return lastTestStatus; } public Instant getLastTestedAt() { return lastTestedAt; }
+    public boolean isAutoGenerateWorkoutAfterImport() { return Boolean.TRUE.equals(autoGenerateWorkoutAfterImport); }
 }

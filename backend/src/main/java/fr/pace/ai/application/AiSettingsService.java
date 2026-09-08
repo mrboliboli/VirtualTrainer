@@ -45,6 +45,7 @@ public class AiSettingsService {
         AiConfiguration value = getOrCreate();
         value.update(request.active(), request.fournisseur(), request.urlBase(), properties.model(), properties.model(),
                 request.temperature(), request.jetonsMaximum(), request.instructionsPersonnalisees(), clock.instant());
+        value.configureWorkoutAutomation(request.generationSeanceApresImport(), clock.instant());
         return repository.save(value);
     }
 

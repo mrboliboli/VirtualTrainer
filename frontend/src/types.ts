@@ -137,6 +137,7 @@ export interface ReglagesIa {
   cleConfiguree: boolean;
   statutDernierTest: 'REUSSI' | 'ECHEC' | null;
   dateDernierTest: string | null;
+  generationSeanceApresImport: boolean;
 }
 
 export type StatutAnalyse = 'EN_ATTENTE' | 'EN_COURS' | 'REUSSIE' | 'ERREUR_TEMPORAIRE' | 'ERREUR_DEFINITIVE';

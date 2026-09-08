@@ -9,6 +9,9 @@ import fr.pace.garmin.TemporaryGarminConnectorException;
 import fr.pace.garmin.synchronization.SynchronizationCandidateNotFoundException;
 import fr.pace.garmin.synchronization.SynchronizationNotFoundException;
 import fr.pace.profile.ProfileNotConfiguredException;
+import fr.pace.ai.domain.AiInvalidResponseException;
+import fr.pace.ai.domain.AiTemporaryException;
+import fr.pace.ai.domain.AiUnavailableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -20,6 +23,27 @@ import java.util.UUID;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    @ExceptionHandler(AiInvalidResponseException.class)
+    public ProblemDetail handleInvalidAi(AiInvalidResponseException exception) {
+        ProblemDetail detail = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
+        detail.setTitle("Réponse IA inexploitable");
+        return detail;
+    }
+
+    @ExceptionHandler(AiTemporaryException.class)
+    public ProblemDetail handleTemporaryAi(AiTemporaryException exception) {
+        ProblemDetail detail = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage());
+        detail.setTitle("IA temporairement indisponible");
+        return detail;
+    }
+
+    @ExceptionHandler(AiUnavailableException.class)
+    public ProblemDetail handleUnavailableAi(AiUnavailableException exception) {
+        ProblemDetail detail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, exception.getMessage());
+        detail.setTitle("Appel IA refusé");
+        return detail;
+    }
 
     @ExceptionHandler({ProfileNotConfiguredException.class, GoalNotFoundException.class, SortieNotFoundException.class,
             SynchronizationNotFoundException.class, SynchronizationCandidateNotFoundException.class})

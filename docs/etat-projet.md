@@ -28,10 +28,11 @@ corrigée.
 
 ## Prochaine tranche fonctionnelle
 
-La prochaine tranche est l'intégration IA. Elle reçoit des agrégats validés, jamais
-la série FIT brute complète. La comparaison prévu/réalisé, la prise en compte fine
-du relief et les conséquences sur la séance suivante seront ajoutées lorsque les
-séances planifiées seront disponibles.
+La phase 7 génère, sur demande, une prochaine séance structurée à partir de
+l'objectif futur, du profil et de l'historique récent. La proposition doit être
+explicitement acceptée avant d'apparaître comme séance planifiée et n'est jamais
+envoyée automatiquement vers Garmin. Son plan détaillé est décrit dans
+`docs/plan-phase-7-prochaine-seance.md`.
 
 ## Vérification de gel
 

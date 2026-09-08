@@ -11,6 +11,7 @@ import fr.pace.garmin.PermanentGarminConnectorException;
 import fr.pace.garmin.TemporaryGarminConnectorException;
 import fr.pace.profile.AthleteProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +43,7 @@ public class GarminSynchronizationService {
     private final Clock clock;
     private final AthleteProfileRepository profileRepository;
     private final GarminSynchronizationProperties properties;
+    private final ApplicationEventPublisher events;
 
     @Autowired
     public GarminSynchronizationService(
@@ -50,9 +52,10 @@ public class GarminSynchronizationService {
             GarminActivityClient client,
             ObjectMapper objectMapper,
             AthleteProfileRepository profileRepository,
-            GarminSynchronizationProperties properties
+            GarminSynchronizationProperties properties,
+            ApplicationEventPublisher events
     ) {
-        this(synchronizationRepository, activityRepository, client, objectMapper, profileRepository, properties, Clock.systemUTC());
+        this(synchronizationRepository, activityRepository, client, objectMapper, profileRepository, properties, Clock.systemUTC(), events);
     }
 
     GarminSynchronizationService(
@@ -63,7 +66,7 @@ public class GarminSynchronizationService {
             Clock clock
     ) {
         this(synchronizationRepository, activityRepository, client, objectMapper, null,
-                new GarminSynchronizationProperties("", 2, 7, java.time.ZoneId.of("Europe/Paris")), clock);
+                new GarminSynchronizationProperties("", 2, 7, java.time.ZoneId.of("Europe/Paris")), clock, event -> {});
     }
 
     GarminSynchronizationService(
@@ -75,6 +78,15 @@ public class GarminSynchronizationService {
             GarminSynchronizationProperties properties,
             Clock clock
     ) {
+        this(synchronizationRepository, activityRepository, client, objectMapper, profileRepository, properties, clock, event -> {});
+    }
+
+    GarminSynchronizationService(
+            ActivitySynchronizationRepository synchronizationRepository,
+            SynchronizedActivityRepository activityRepository,
+            GarminActivityClient client, ObjectMapper objectMapper, AthleteProfileRepository profileRepository,
+            GarminSynchronizationProperties properties, Clock clock, ApplicationEventPublisher events
+    ) {
         this.synchronizationRepository = synchronizationRepository;
         this.activityRepository = activityRepository;
         this.client = client;
@@ -82,6 +94,7 @@ public class GarminSynchronizationService {
         this.profileRepository = profileRepository;
         this.properties = properties;
         this.clock = clock;
+        this.events = events;
     }
 
     public ActivitySynchronization start(String idempotencyKey) {
@@ -119,14 +132,16 @@ public class GarminSynchronizationService {
             return;
         }
         byte[] fit = client.downloadFit(externalId);
-        activityRepository.save(SynchronizedActivity.create(
+        SynchronizedActivity imported = SynchronizedActivity.create(
                 externalId,
                 serialize(details),
                 fit,
                 sha256(fit),
                 GarminSubjectiveFeedback.from(details, objectMapper),
                 clock.instant()
-        ));
+        );
+        activityRepository.save(imported);
+        events.publishEvent(new ActivityImportedEvent(imported.getId()));
     }
 
     @Scheduled(fixedDelayString = "${pace.garmin.synchronization.retry-scan-delay:60000}")

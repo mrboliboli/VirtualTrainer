@@ -7,8 +7,12 @@ import fr.pace.ai.domain.ConfidenceLevel;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+
+import fr.pace.ai.domain.WorkoutGenerationRequest;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -35,6 +39,24 @@ class OpenAiProviderTest {
         assertThatThrownBy(() -> provider.analyzeActivity(request()))
                 .isInstanceOf(AiInvalidResponseException.class)
                 .hasMessageContaining("contrat");
+    }
+
+    @Test
+    void generatesAndValidatesStructuredWorkout() throws Exception {
+        var output = mapper.readTree("""
+                {"title":"Footing facile","plannedDate":"2026-09-09","objective":"Récupérer",
+                "durationMinutes":35,"intensity":"FACILE","steps":["10 min faciles","20 min régulières","5 min retour au calme"],
+                "rationale":"Après la sortie récente","confidence":"MOYEN"}
+                """);
+        OpenAiResponsesClient fakeClient = new OpenAiResponsesClient(null, mapper, null, millis -> { }) {
+            @Override Response execute(String instructions, com.fasterxml.jackson.databind.JsonNode input,
+                                       String schemaName, com.fasterxml.jackson.databind.JsonNode schema, String correlationId) {
+                return new Response("resp", output, 1, 1);
+            }
+        };
+        var result = new OpenAiProvider(mapper, fakeClient).generateWorkout(new WorkoutGenerationRequest(
+                LocalDate.parse("2026-09-09"), "Course de 20 km", List.of(), List.of(), List.of(), 60));
+        assertThat(result.durationMinutes()).isEqualTo(35);
     }
 
     private ActivityAnalysisRequest request() {

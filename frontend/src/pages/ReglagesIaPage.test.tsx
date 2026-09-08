@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ReglagesIaPage } from './ReglagesIaPage';
 
-const reglages = { active: true, fournisseur: 'OPENAI', urlBase: 'https://api.openai.com/v1', modeleAnalyse: 'modele-analyse', modelePlanification: null, temperature: 0.3, jetonsMaximum: 1200, instructionsPersonnalisees: null, cleConfiguree: true, statutDernierTest: null, dateDernierTest: null };
+const reglages = { active: true, fournisseur: 'OPENAI', urlBase: 'https://api.openai.com/v1', modeleAnalyse: 'modele-analyse', modelePlanification: null, temperature: 0.3, jetonsMaximum: 1200, instructionsPersonnalisees: null, cleConfiguree: true, statutDernierTest: null, dateDernierTest: null, generationSeanceApresImport: false };
 
 describe('ReglagesIaPage', () => {
   afterEach(() => { cleanup(); vi.unstubAllGlobals(); });

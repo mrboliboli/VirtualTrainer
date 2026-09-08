@@ -1,4 +1,4 @@
-import type { ActiviteRecente, AnalyseSortie, ConnexionGarmin, DetailSortie, Objectif, ProfilAthlete, ReglagesIa, SynchronisationGarmin } from './types';
+import type { ActiviteRecente, AnalyseSortie, ConnexionGarmin, DetailSortie, Objectif, ProfilAthlete, ReglagesIa, SeancePlanifiee, SynchronisationGarmin } from './types';
 
 const BASE_API = import.meta.env.VITE_API_URL ?? '/api/v1';
 
@@ -65,4 +65,6 @@ export const api = {
   analyseSortie: (id: string) => requete<AnalyseSortie>(`/sorties/${encodeURIComponent(id)}/analyse`),
   lancerAnalyseSortie: (id: string) => requete<AnalyseSortie>(`/sorties/${encodeURIComponent(id)}/analyse`, { method: 'POST' }),
   regenererAnalyseSortie: (id: string) => requete<AnalyseSortie>(`/sorties/${encodeURIComponent(id)}/analyse/regeneration`, { method: 'POST' }),
+  prochaineSeance: () => requete<SeancePlanifiee>('/seances/prochaine'),
+  genererProchaineSeance: () => requete<SeancePlanifiee>('/seances/prochaine/generation', { method: 'POST' }),
 };
