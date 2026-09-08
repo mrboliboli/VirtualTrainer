@@ -51,6 +51,15 @@ h2 { font-size: 1.1rem; line-height: 1.35; margin-bottom: 8px; }
 .liste-simple { list-style: none; margin: 12px 0 0; padding: 0; }
 .liste-simple li { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--bordure); }
 .liste-simple small { display: block; color: var(--texte-secondaire); text-transform: capitalize; }
+.liste-sorties-accueil { list-style: none; margin: 0; padding: 0; }
+.liste-sorties-accueil > li { padding-block: 14px; border-bottom: 1px solid var(--bordure); }
+.liste-sorties-accueil > li:last-child { border-bottom: 0; padding-bottom: 0; }
+.sortie-accueil__entete { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.sortie-accueil__entete time { color: var(--texte-secondaire); text-transform: capitalize; }
+.sortie-accueil__mesures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; margin: 0; }
+.sortie-accueil__mesures div { min-width: 0; }
+.sortie-accueil__mesures dt { color: var(--texte-secondaire); font-size: .78rem; }
+.sortie-accueil__mesures dd { margin: 2px 0 0; font-weight: 700; font-variant-numeric: tabular-nums; }
 .liste-cartes { display: grid; gap: 16px; }
 .pastille { padding: 4px 10px; border-radius: 999px; background: var(--surface-secondaire); font-size: .75rem; }
 .pastille--succes, .confiance--elevee { color: var(--succes); background: rgb(39 103 73 / 12%); }

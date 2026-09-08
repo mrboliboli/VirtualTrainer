@@ -20,7 +20,7 @@ function donneesInitiales(seance = proposition) {
     const url = String(entree);
     if (url.endsWith('/profil')) return Promise.resolve(reponseJson({ prenom: 'Fabien', joursDisponibles: [], terrainsAccessibles: [] }));
     if (url.endsWith('/objectifs')) return Promise.resolve(reponseJson([{ id: 'obj-1', nom: '10 km', date: '2026-12-10', unite: 'KM', type: '10_KM', priorite: 1, statut: 'PREVU', principal: true }]));
-    if (url.includes('/sorties?')) return Promise.resolve(reponseJson([]));
+    if (url.includes('/sorties?')) return Promise.resolve(reponseJson([{ id: 'sortie-1', dateHeure: '2026-09-08T08:00:00Z', sport: 'running', distanceMetres: 10000, dureeSecondes: 3600, frequenceCardiaqueMoyenne: 148, typeEntrainement: 'Base aérobie', source: 'GARMIN_PERSONNEL' }]));
     if (url.endsWith('/seances/prochaine')) return Promise.resolve(reponseJson(seance));
     return Promise.reject(new Error(`URL inattendue : ${url}`));
   });
@@ -47,6 +47,10 @@ describe('TableauDeBordPage — prochaine séance', () => {
     expect(within(carte).getByText(/confiance de la proposition : elevee/i)).toBeVisible();
     expect(within(carte).getByRole('button', { name: 'Refuser' })).toBeEnabled();
     expect(within(carte).getByRole('button', { name: 'Régénérer' })).toBeEnabled();
+    expect(screen.getByText('Base aérobie')).toBeVisible();
+    expect(screen.getByText('6:00 /km')).toBeVisible();
+    expect(screen.getByText('148 bpm')).toBeVisible();
+    expect(screen.queryByText(/^running$/i)).not.toBeInTheDocument();
 
     await userEvent.click(within(carte).getByRole('button', { name: 'Accepter' }));
     expect(await within(carte).findByText('Planifiée')).toBeVisible();

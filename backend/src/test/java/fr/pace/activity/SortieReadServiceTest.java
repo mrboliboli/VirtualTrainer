@@ -42,8 +42,9 @@ class SortieReadServiceTest {
         assertThat(result).extracting(SortieResponse::dateHeure).containsExactly(
                 Instant.parse("2026-08-21T07:00:00Z"), Instant.parse("2026-08-19T06:00:00Z"));
         assertThat(result.getFirst()).extracting(SortieResponse::sport, SortieResponse::distanceMetres,
-                        SortieResponse::dureeSecondes, SortieResponse::source)
-                .containsExactly("trail_running", 12_500L, 4_200L, "GARMIN_PERSONNEL");
+                        SortieResponse::dureeSecondes, SortieResponse::frequenceCardiaqueMoyenne,
+                        SortieResponse::typeEntrainement, SortieResponse::source)
+                .containsExactly("trail_running", 12_500L, 4_200L, 148, "Base aérobie", "GARMIN_PERSONNEL");
         verify(jdbc).query(argThat((String sql) -> sql.contains("summary.started_at")
                 && sql.contains("startedAt") && sql.contains("DESC NULLS LAST")), any(RowMapper.class), anyInt());
     }
@@ -55,7 +56,7 @@ class SortieReadServiceTest {
         when(result.getString("source")).thenReturn("GARMIN_PERSONNEL");
         when(result.getString("details_json")).thenReturn("""
                 {"startedAt":"%s","sport":"%s","availableMetrics":{"summaryDTO":{
-                "distance":%d,"duration":%d}}}
+                "distance":%d,"duration":%d,"averageHR":148,"trainingEffectLabel":"AEROBIC_BASE"}}}
                 """.formatted(date, sport, distance, duration));
         return mapper.mapRow(result, 0);
     }

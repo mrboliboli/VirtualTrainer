@@ -24,6 +24,8 @@ class SortieControllerTest {
                 "running",
                 10_000L,
                 3_600L,
+                150,
+                "Base aérobie",
                 "GARMIN_PERSONNEL"
         ));
         when(service.recent(3)).thenReturn(expected);

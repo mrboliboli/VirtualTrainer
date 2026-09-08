@@ -9,5 +9,7 @@ public record SortieResponse(
         String sport,
         Long distanceMetres,
         Long dureeSecondes,
+        Integer frequenceCardiaqueMoyenne,
+        String typeEntrainement,
         String source
 ) { }

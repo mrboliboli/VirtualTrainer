@@ -55,11 +55,13 @@ public class SortieReadService {
                     text(details.path("sport")),
                     longValue(summary, metrics, "distance"),
                     longValue(summary, metrics, "duration"),
+                    integerValue(summary, metrics, "averageHR", "avgHeartRate", "averageHeartRate"),
+                    trainingLabel(text(summary.path("trainingEffectLabel")), text(metrics.path("trainingEffectLabel"))),
                     activity.source()
             );
         } catch (JsonProcessingException exception) {
             LOGGER.warn("Une sortie persistée contient des détails JSON illisibles", exception);
-            return new SortieResponse(activity.id(), null, null, null, null, activity.source());
+            return new SortieResponse(activity.id(), null, null, null, null, null, null, activity.source());
         }
     }
 
@@ -80,6 +82,28 @@ public class SortieReadService {
         JsonNode value = first.path(field);
         if (!value.isNumber()) value = second.path(field);
         return value.isNumber() ? value.longValue() : null;
+    }
+    private static Integer integerValue(JsonNode first, JsonNode second, String... fields) {
+        for (String field : fields) {
+            JsonNode value = first.path(field);
+            if (!value.isNumber()) value = second.path(field);
+            if (value.isNumber()) return value.intValue();
+        }
+        return null;
+    }
+    private static String trainingLabel(String first, String second) {
+        String value = first != null ? first : second;
+        if (value == null) return null;
+        return switch (value.toUpperCase(java.util.Locale.ROOT)) {
+            case "RECOVERY" -> "Récupération";
+            case "AEROBIC_BASE" -> "Base aérobie";
+            case "AEROBIC_ENDURANCE" -> "Endurance aérobie";
+            case "TEMPO" -> "Tempo";
+            case "THRESHOLD" -> "Seuil";
+            case "VO2_MAX", "VO2MAX" -> "VO₂ max";
+            case "ANAEROBIC" -> "Anaérobie";
+            default -> null;
+        };
     }
     private record StoredActivity(java.util.UUID id, String source, String detailsJson) { }
 }

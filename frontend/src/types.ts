@@ -59,6 +59,8 @@ export interface ActiviteRecente {
   sport: string | null;
   distanceMetres: number | null;
   dureeSecondes: number | null;
+  frequenceCardiaqueMoyenne: number | null;
+  typeEntrainement: string | null;
   source: string;
 }
 
