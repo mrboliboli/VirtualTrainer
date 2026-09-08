@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -27,19 +26,22 @@ public class SortieReadService {
 
     @Transactional(readOnly = true)
     public List<SortieResponse> recent(int limit) {
-        return jdbc.query("SELECT id,source,details_json FROM activity ORDER BY discovered_at DESC LIMIT ?",
+        return jdbc.query("""
+                        SELECT a.id,a.source,a.details_json
+                        FROM activity a
+                        LEFT JOIN activity_fit_summary summary ON summary.activity_id=a.id
+                        ORDER BY COALESCE(summary.started_at,
+                          NULLIF(a.details_json::jsonb ->> 'startedAt','')::timestamptz) DESC NULLS LAST,
+                          a.discovered_at DESC
+                        LIMIT ?
+                        """,
                         (result, row) -> new StoredActivity(
                                 result.getObject("id", java.util.UUID.class),
                                 result.getString("source"),
                                 result.getString("details_json")
                         ), limit)
                 .stream()
-                .map(this::toResponse)
-                .sorted(Comparator.comparing(
-                        SortieResponse::dateHeure,
-                        Comparator.nullsLast(Comparator.reverseOrder())
-                ))
-                .toList();
+                .map(this::toResponse).toList();
     }
 
     private SortieResponse toResponse(StoredActivity activity) {

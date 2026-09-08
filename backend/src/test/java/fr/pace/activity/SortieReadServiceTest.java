@@ -16,6 +16,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.argThat;
 
 class SortieReadServiceTest {
     @Test
@@ -27,8 +29,8 @@ class SortieReadServiceTest {
         when(jdbc.query(any(String.class), any(RowMapper.class), anyInt())).thenAnswer(invocation -> {
             RowMapper<Object> mapper = invocation.getArgument(1);
             return List.of(
-                    map(mapper, "2026-08-19T06:00:00Z", "running", 8_000, 3_000),
-                    map(mapper, "2026-08-21T07:00:00Z", "trail_running", 12_500, 4_200)
+                    map(mapper, "2026-08-21T07:00:00Z", "trail_running", 12_500, 4_200),
+                    map(mapper, "2026-08-19T06:00:00Z", "running", 8_000, 3_000)
             );
         });
         SortieReadService service = new SortieReadService(jdbc, new ObjectMapper());
@@ -42,6 +44,8 @@ class SortieReadServiceTest {
         assertThat(result.getFirst()).extracting(SortieResponse::sport, SortieResponse::distanceMetres,
                         SortieResponse::dureeSecondes, SortieResponse::source)
                 .containsExactly("trail_running", 12_500L, 4_200L, "GARMIN_PERSONNEL");
+        verify(jdbc).query(argThat((String sql) -> sql.contains("summary.started_at")
+                && sql.contains("startedAt") && sql.contains("DESC NULLS LAST")), any(RowMapper.class), anyInt());
     }
 
     private static Object map(RowMapper<Object> mapper, String date, String sport, long distance, long duration)
