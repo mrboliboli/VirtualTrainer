@@ -46,7 +46,11 @@ export interface SeancePlanifiee {
   distanceKilometres?: number;
   intensite: string;
   explicationCoach?: string;
-  statut: 'PROPOSEE' | 'PLANIFIEE' | 'EFFECTUEE' | 'REPORTEE' | 'ANNULEE' | 'REMPLACEE';
+  etapes: string[];
+  confiance?: ConfianceCalcul;
+  statut: 'PROPOSEE' | 'ACCEPTEE' | 'PLANIFIEE' | 'EFFECTUEE' | 'REFUSEE' | 'REPORTEE' | 'ANNULEE' | 'REMPLACEE';
+  version?: number;
+  versionPrecedenteId?: string;
 }
 
 export interface ActiviteRecente {

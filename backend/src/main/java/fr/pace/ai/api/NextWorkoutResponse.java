@@ -7,4 +7,4 @@ import java.util.UUID;
 public record NextWorkoutResponse(UUID id, String titre, LocalDate datePrevue, String type,
                                   Integer dureeMinutes, Double distanceKilometres, String intensite,
                                   String explicationCoach, List<String> etapes, String confiance,
-                                  String statut) { }
+                                  String statut, Integer version, UUID versionPrecedenteId) { }

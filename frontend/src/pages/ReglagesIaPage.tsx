@@ -28,7 +28,7 @@ export function ReglagesIaPage() {
   };
   const dateTest = reglages.dateDernierTest ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(reglages.dateDernierTest)) : null;
 
-  return <div className="pile"><header className="entete-page"><p className="surtitre">Configuration locale</p><h1>Réglages IA</h1><p>Choisis comment le coach interprète tes sorties. La clé reste dans l’environnement du serveur et n’est jamais affichée ici.</p></header>
+  return <div className="pile reglages-ia"><header className="entete-page"><p className="surtitre">Configuration locale</p><h1>Réglages IA</h1><p>Choisis comment le coach interprète tes sorties. La clé reste dans l’environnement du serveur et n’est jamais affichée ici.</p></header>
     {erreur && <Erreur message={erreur} />}{confirmation && <p className="confirmation" role="status">{confirmation}</p>}
     <section className="carte"><div className="titre-ligne"><div><h2>Clé d’accès</h2><p className="texte-discret">À configurer avec la variable <code>PACE_AI_API_KEY</code> sur le serveur.</p></div><span className={`pastille ${reglages.cleConfiguree ? 'pastille--succes' : 'pastille--attention'}`}>{reglages.cleConfiguree ? 'Clé configurée' : 'Clé absente'}</span></div></section>
     <form className="formulaire" onSubmit={enregistrer}>

@@ -67,4 +67,6 @@ export const api = {
   regenererAnalyseSortie: (id: string) => requete<AnalyseSortie>(`/sorties/${encodeURIComponent(id)}/analyse/regeneration`, { method: 'POST' }),
   prochaineSeance: () => requete<SeancePlanifiee>('/seances/prochaine'),
   genererProchaineSeance: () => requete<SeancePlanifiee>('/seances/prochaine/generation', { method: 'POST' }),
+  accepterProchaineSeance: (id: string) => requete<SeancePlanifiee>(`/seances/prochaine/${encodeURIComponent(id)}/acceptation`, { method: 'POST' }),
+  refuserProchaineSeance: (id: string) => requete<SeancePlanifiee>(`/seances/prochaine/${encodeURIComponent(id)}/refus`, { method: 'POST' }),
 };

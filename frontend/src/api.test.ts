@@ -66,4 +66,15 @@ describe('client API', () => {
     expect(fetch).toHaveBeenNthCalledWith(1, '/api/v1/reglages/ia/test', expect.objectContaining({ method: 'POST' }));
     expect(fetch).toHaveBeenNthCalledWith(2, '/api/v1/sorties/sortie%201/analyse/regeneration', expect.objectContaining({ method: 'POST' }));
   });
+
+  it('utilise les actions françaises de la prochaine séance', async () => {
+    const fetch = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 'séance 1', statut: 'PLANIFIEE' }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 'séance 1', statut: 'REFUSEE' }), { status: 200 }));
+    vi.stubGlobal('fetch', fetch);
+    await api.accepterProchaineSeance('séance 1');
+    await api.refuserProchaineSeance('séance 1');
+    expect(fetch).toHaveBeenNthCalledWith(1, '/api/v1/seances/prochaine/s%C3%A9ance%201/acceptation', expect.objectContaining({ method: 'POST' }));
+    expect(fetch).toHaveBeenNthCalledWith(2, '/api/v1/seances/prochaine/s%C3%A9ance%201/refus', expect.objectContaining({ method: 'POST' }));
+  });
 });
