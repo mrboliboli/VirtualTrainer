@@ -37,3 +37,8 @@ docker compose up --build
 
 Le connecteur Garmin reste désactivé par défaut. Ne l'activer qu'après acceptation
 explicite de ses risques et avec un accès au frontal protégé par HTTPS ou VPN.
+
+L'analyse IA est également désactivée par défaut. Pour la tester, fournir
+`PACE_AI_API_KEY` au processus Java, redémarrer l'application, puis l'activer dans
+la page Réglages. Seuls les agrégats sportifs décrits dans le plan de phase 6 sont
+envoyés ; ni FIT brut, ni trace GPS, ni identifiant Garmin ne quittent l'application.

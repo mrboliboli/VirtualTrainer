@@ -27,6 +27,34 @@ class GarminSubjectiveFeedbackTest {
     }
 
     @Test
+    @DisplayName("Devrait reconnaître les vrais champs directWorkout renvoyés par Garmin")
+    void from_shouldExtractDirectWorkoutFeedback() {
+        ExternalActivityDetails details = new ExternalActivityDetails(
+                "456", Instant.EPOCH, "running",
+                Map.of("summaryDTO", Map.of("directWorkoutRpe", 50, "directWorkoutFeel", 25))
+        );
+
+        GarminSubjectiveFeedback feedback = GarminSubjectiveFeedback.from(details, new ObjectMapper());
+
+        assertThat(feedback.rpe()).isEqualTo(5);
+        assertThat(feedback.feelingScore()).isEqualTo(25);
+        assertThat(feedback.source()).isEqualTo("GARMIN");
+    }
+
+    @Test
+    @DisplayName("Devrait interpréter la valeur Garmin 10 comme un effort de 1 sur 10")
+    void from_shouldNormalizeLowestGarminRpe() {
+        ExternalActivityDetails details = new ExternalActivityDetails(
+                "789", Instant.EPOCH, "running",
+                Map.of("summaryDTO", Map.of("directWorkoutRpe", 10))
+        );
+
+        GarminSubjectiveFeedback feedback = GarminSubjectiveFeedback.from(details, new ObjectMapper());
+
+        assertThat(feedback.rpe()).isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("Ne devrait pas inventer un ressenti lorsque Garmin ne le fournit pas")
     void from_shouldRemainEmpty_whenFeedbackIsMissing() {
         ExternalActivityDetails details = new ExternalActivityDetails(

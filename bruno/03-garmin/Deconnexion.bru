@@ -1,0 +1,15 @@
+meta {
+  name: Déconnexion Garmin
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/garmin/connexion
+  body: none
+  auth: none
+}
+
+headers {
+  X-Requete-Pace: interface-web
+}

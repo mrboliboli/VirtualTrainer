@@ -1,0 +1,11 @@
+meta {
+  name: Lister les sorties
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/sorties?limite=20
+  body: none
+  auth: none
+}

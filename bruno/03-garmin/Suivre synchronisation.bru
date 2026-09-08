@@ -1,0 +1,11 @@
+meta {
+  name: Suivre une synchronisation
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/garmin/synchronisations/{{synchronisationId}}
+  body: none
+  auth: none
+}

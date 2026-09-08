@@ -54,6 +54,7 @@ h2 { font-size: 1.1rem; line-height: 1.35; margin-bottom: 8px; }
 .liste-cartes { display: grid; gap: 16px; }
 .pastille { padding: 4px 10px; border-radius: 999px; background: var(--surface-secondaire); font-size: .75rem; }
 .pastille--succes, .confiance--elevee { color: var(--succes); background: rgb(39 103 73 / 12%); }
+.pastille--attention { color: #704300; background: rgb(183 216 61 / 25%); }
 .confiance--moyenne { color: #704300; background: rgb(183 216 61 / 25%); }
 .confiance--faible { color: var(--danger); background: rgb(161 43 43 / 10%); }
 .actions { display: flex; gap: 20px; margin-top: 16px; }
@@ -78,6 +79,7 @@ h2 { font-size: 1.1rem; line-height: 1.35; margin-bottom: 8px; }
 .formulaire { display: grid; gap: 16px; max-width: 720px; margin-inline: auto; }
 .grille-champs { display: grid; gap: 16px; }
 .grille-champs h2, .grille-champs .aide { grid-column: 1 / -1; }
+.champ-large { grid-column: 1 / -1; }
 label, legend { font-weight: 650; }
 input:not([type="checkbox"]), select, textarea { display: block; width: 100%; min-height: 48px; margin-top: 6px; padding: 10px 12px; border: 1px solid var(--bordure); border-radius: 10px; background: var(--surface); color: var(--texte); }
 textarea { min-height: 96px; resize: vertical; }
@@ -111,6 +113,19 @@ fieldset { margin: 16px 0; padding: 0; border: 0; }
 .calcul-factuel { padding: 14px 16px; border: 1px solid var(--bordure); border-radius: 12px; }
 .calcul-factuel h3, .calcul-factuel p { margin: 0; }
 .calcul-factuel .texte-discret { margin-top: 6px; }
+.carte--coach { border-top: 5px solid var(--primaire); }
+.carte--coach h3 { margin-block: 0 6px; }
+.etat-inline { display: grid; gap: 12px; justify-items: start; }
+.etat-inline p { margin: 0; }
+.resume-coach { font-size: 1.05rem; font-weight: 650; }
+.interpretation { padding: 16px; border: 1px solid var(--bordure); border-radius: 12px; }
+.interpretation p:last-child { margin-bottom: 0; }
+.faits-sources { color: var(--texte-secondaire); font-size: .8rem; }
+.grille-coach { display: grid; gap: 16px; }
+.grille-coach ul, .hypotheses ul, .carte--coach div > ul { margin-block: 8px 0; padding-left: 20px; }
+.recommandation { padding: 16px; border-radius: 12px; background: rgb(183 216 61 / 14%); }
+.recommandation p:last-child { margin-bottom: 0; }
+.hypotheses { padding: 16px; border-left: 4px solid #8a5200; background: #fff5dc; border-radius: 0 10px 10px 0; }
 .alerte ul { margin-bottom: 0; padding-left: 20px; }
 .tableau-defilant { max-width: 100%; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: .875rem; }
@@ -131,4 +146,5 @@ th, td { padding: 10px 12px; border-bottom: 1px solid var(--bordure); text-align
   .navigation__element { grid-template-columns: 28px 1fr; place-content: unset; place-items: center start; padding: 8px 12px; text-align: left; }
   .navigation__element small { font-size: .875rem; }
   .liste-cartes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grille-coach { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

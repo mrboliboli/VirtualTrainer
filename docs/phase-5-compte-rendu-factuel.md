@@ -13,8 +13,28 @@ normalise alors sur 10. Une valeur déjà comprise entre 0 et 10 est conservée.
 champ `activityFeel` est affiché comme un score Garmin sur 100 : aucun libellé
 subjectif n'est inventé sans contrat source stable.
 
+Les noms réellement observés `directWorkoutRpe` et `directWorkoutFeel` sont aussi
+pris en charge. La migration V5 récupère ces valeurs dans le JSON déjà conservé
+afin de compléter les sorties importées avant ce correctif.
+
 Une nouvelle confirmation d'une activité déjà connue actualise son détail et son
 ressenti sans télécharger ni dupliquer à nouveau le FIT.
+
+## Rattrapage de l'historique Garmin
+
+La recherche part d'une date seuil configurable par
+`PACE_GARMIN_IMPORT_START_DATE`. Lorsqu'elle n'est pas renseignée, la date de
+création du premier profil devient la date de première utilisation. Pour
+l'installation locale actuelle, le seuil est fixé au 1er août 2026.
+
+Le serveur parcourt l'historique par fenêtres de sept jours, de la plus récente à
+la plus ancienne, exclut les identifiants Garmin déjà importés et propose au plus
+deux activités à la fois. Après une confirmation, l'interface relance la recherche
+et fait remonter automatiquement la suivante. Quand aucune candidate ne subsiste,
+elle indique que toutes les activités depuis la date seuil sont importées.
+
+La contrainte d'unicité `(source, identifiant externe)` reste la protection finale
+contre les doublons.
 
 ## Calculs locaux
 

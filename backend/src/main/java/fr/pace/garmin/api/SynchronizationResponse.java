@@ -13,7 +13,9 @@ public record SynchronizationResponse(
         UUID id,
         String statut,
         String messageUtilisateur,
-        List<CandidateResponse> candidates
+        List<CandidateResponse> candidates,
+        java.time.LocalDate dateDebutRecherche,
+        boolean rattrapageTermine
 ) {
     static SynchronizationResponse from(ActivitySynchronization synchronization) {
         String status = switch (synchronization.getStatus()) {
@@ -29,8 +31,8 @@ public record SynchronizationResponse(
         return new SynchronizationResponse(
                 synchronization.getId(),
                 status,
-                synchronization.getErrorMessage(),
-                candidates
+                synchronization.getErrorMessage(), candidates,
+                synchronization.getSearchStartDate(), synchronization.isCatchUpComplete()
         );
     }
 

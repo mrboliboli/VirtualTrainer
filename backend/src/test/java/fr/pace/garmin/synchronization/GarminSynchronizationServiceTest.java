@@ -123,6 +123,27 @@ class GarminSynchronizationServiceTest {
     }
 
     @Test
+    @DisplayName("Devrait exclure les sorties importées et ne proposer que les deux nouvelles plus récentes")
+    void start_shouldExcludeImportedActivitiesAndLimitCandidates() {
+        prepareNewSynchronization("historique");
+        ExternalActivitySummary imported = new ExternalActivitySummary("1", NOW, "running", 10_000L, 3_600L);
+        ExternalActivitySummary recent = new ExternalActivitySummary("2", NOW.minusSeconds(60), "running", 8_000L, 2_800L);
+        ExternalActivitySummary older = new ExternalActivitySummary("3", NOW.minusSeconds(120), "running", 7_000L, 2_500L);
+        ExternalActivitySummary ignored = new ExternalActivitySummary("4", NOW.minusSeconds(180), "running", 6_000L, 2_100L);
+        when(client.pullActivities(any(LocalDate.class), any(LocalDate.class), anyInt(), anyString()))
+                .thenReturn(List.of(imported, older, ignored, recent));
+        SynchronizedActivity existing = org.mockito.Mockito.mock(SynchronizedActivity.class);
+        when(existing.getSourceExternalId()).thenReturn("1");
+        when(activityRepository.findAllBySourceAndSourceExternalIdIn(anyString(), any()))
+                .thenReturn(List.of(existing));
+
+        ActivitySynchronization result = service().start("historique");
+
+        assertThat(result.getCandidates()).extracting(SynchronizationCandidate::getExternalId)
+                .containsExactly("2", "3");
+    }
+
+    @Test
     @DisplayName("Devrait confirmer avec la date et le sport de la candidate puis persister le FIT")
     void confirm_shouldPersistFitAndCandidateMetadata_whenDetailHasNoRootDate() {
         // GIVEN

@@ -123,4 +123,46 @@ export interface TableauDeBord {
 export type StatutConnexionGarmin = 'DECONNECTE' | 'CONNEXION_EN_COURS' | 'MFA_REQUIS' | 'CONNECTE' | 'EXPIREE' | 'ERREUR';
 export interface ConnexionGarmin { statut: StatutConnexionGarmin; mode: 'PERSONNEL'; compte?: { nomAffiche: string }; derniereSynchronisation?: string; derniereActivite?: string; defiMfaId?: string; }
 export interface CandidateGarmin { idExterne: string; dateHeure: string; sport: string; distanceMetres?: number; dureeSecondes?: number; confiance: 'ELEVEE' | 'MOYENNE' | 'FAIBLE'; }
-export interface SynchronisationGarmin { id: string; statut: 'EN_COURS' | 'TERMINEE' | 'ERREUR_TEMPORAIRE' | 'ERREUR_DEFINITIVE'; messageUtilisateur?: string; candidates?: CandidateGarmin[]; }
+export interface SynchronisationGarmin { id: string; statut: 'EN_COURS' | 'TERMINEE' | 'ERREUR_TEMPORAIRE' | 'ERREUR_DEFINITIVE'; messageUtilisateur?: string; candidates?: CandidateGarmin[]; dateDebutRecherche?: string; rattrapageTermine?: boolean; }
+
+export interface ReglagesIa {
+  fournisseur: 'OPENAI';
+  urlBase: string;
+  modeleAnalyse: string;
+  modelePlanification: string | null;
+  temperature: number;
+  jetonsMaximum: number;
+  instructionsPersonnalisees: string | null;
+  active: boolean;
+  cleConfiguree: boolean;
+  statutDernierTest: 'REUSSI' | 'ECHEC' | null;
+  dateDernierTest: string | null;
+}
+
+export type StatutAnalyse = 'EN_ATTENTE' | 'EN_COURS' | 'REUSSIE' | 'ERREUR_TEMPORAIRE' | 'ERREUR_DEFINITIVE';
+export interface InterpretationCoach {
+  titre: string;
+  texte: string;
+  confiance: ConfianceCalcul;
+  faitsSources: string[];
+}
+export interface AnalyseSortie {
+  id: string;
+  statut: StatutAnalyse;
+  version: number;
+  erreur: string | null;
+  resultat: ResultatAnalyse | null;
+  dateCreation: string;
+  dateMiseAJour: string;
+}
+export interface ResultatAnalyse {
+  resume: string;
+  interpretations: InterpretationCoach[];
+  pointsPositifs: string[];
+  pointsVigilance: string[];
+  recuperation: { recommandation: string; justification: string };
+  hypotheses: string[];
+  donneesManquantes: string[];
+  impactProchaineSeance: string;
+  avertissementSante: string | null;
+}

@@ -1,4 +1,4 @@
-import type { ActiviteRecente, ConnexionGarmin, DetailSortie, Objectif, ProfilAthlete, SynchronisationGarmin } from './types';
+import type { ActiviteRecente, AnalyseSortie, ConnexionGarmin, DetailSortie, Objectif, ProfilAthlete, ReglagesIa, SynchronisationGarmin } from './types';
 
 const BASE_API = import.meta.env.VITE_API_URL ?? '/api/v1';
 
@@ -59,4 +59,10 @@ export const api = {
   lancerSynchronisationGarmin: () => requete<SynchronisationGarmin>('/garmin/synchronisations', { method: 'POST' }),
   synchronisationGarmin: (id: string) => requete<SynchronisationGarmin>(`/garmin/synchronisations/${encodeURIComponent(id)}`),
   confirmerCandidateGarmin: (synchronisationId: string, idExterne: string) => requete<void>(`/garmin/synchronisations/${encodeURIComponent(synchronisationId)}/confirmation`, { method: 'POST', body: JSON.stringify({ idExterne }) }),
+  reglagesIa: () => requete<ReglagesIa>('/reglages/ia'),
+  enregistrerReglagesIa: (reglages: Omit<ReglagesIa, 'cleConfiguree' | 'statutDernierTest' | 'dateDernierTest'>) => requete<ReglagesIa>('/reglages/ia', { method: 'PUT', body: JSON.stringify(reglages) }),
+  testerReglagesIa: () => requete<ReglagesIa>('/reglages/ia/test', { method: 'POST' }),
+  analyseSortie: (id: string) => requete<AnalyseSortie>(`/sorties/${encodeURIComponent(id)}/analyse`),
+  lancerAnalyseSortie: (id: string) => requete<AnalyseSortie>(`/sorties/${encodeURIComponent(id)}/analyse`, { method: 'POST' }),
+  regenererAnalyseSortie: (id: string) => requete<AnalyseSortie>(`/sorties/${encodeURIComponent(id)}/analyse/regeneration`, { method: 'POST' }),
 };

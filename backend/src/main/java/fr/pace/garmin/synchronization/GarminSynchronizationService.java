@@ -6,8 +6,10 @@ import fr.pace.activity.ExternalActivityDetails;
 import fr.pace.activity.ExternalActivitySummary;
 import fr.pace.garmin.GarminActivityClient;
 import fr.pace.garmin.GarminConnectionExpiredException;
+import fr.pace.garmin.GarminSynchronizationProperties;
 import fr.pace.garmin.PermanentGarminConnectorException;
 import fr.pace.garmin.TemporaryGarminConnectorException;
+import fr.pace.profile.AthleteProfileRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -19,9 +21,12 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.HexFormat;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -35,15 +40,19 @@ public class GarminSynchronizationService {
     private final GarminActivityClient client;
     private final ObjectMapper objectMapper;
     private final Clock clock;
+    private final AthleteProfileRepository profileRepository;
+    private final GarminSynchronizationProperties properties;
 
     @Autowired
     public GarminSynchronizationService(
             ActivitySynchronizationRepository synchronizationRepository,
             SynchronizedActivityRepository activityRepository,
             GarminActivityClient client,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            AthleteProfileRepository profileRepository,
+            GarminSynchronizationProperties properties
     ) {
-        this(synchronizationRepository, activityRepository, client, objectMapper, Clock.systemUTC());
+        this(synchronizationRepository, activityRepository, client, objectMapper, profileRepository, properties, Clock.systemUTC());
     }
 
     GarminSynchronizationService(
@@ -53,10 +62,25 @@ public class GarminSynchronizationService {
             ObjectMapper objectMapper,
             Clock clock
     ) {
+        this(synchronizationRepository, activityRepository, client, objectMapper, null,
+                new GarminSynchronizationProperties("", 2, 7, java.time.ZoneId.of("Europe/Paris")), clock);
+    }
+
+    GarminSynchronizationService(
+            ActivitySynchronizationRepository synchronizationRepository,
+            SynchronizedActivityRepository activityRepository,
+            GarminActivityClient client,
+            ObjectMapper objectMapper,
+            AthleteProfileRepository profileRepository,
+            GarminSynchronizationProperties properties,
+            Clock clock
+    ) {
         this.synchronizationRepository = synchronizationRepository;
         this.activityRepository = activityRepository;
         this.client = client;
         this.objectMapper = objectMapper;
+        this.profileRepository = profileRepository;
+        this.properties = properties;
         this.clock = clock;
     }
 
@@ -118,23 +142,54 @@ public class GarminSynchronizationService {
         synchronization.startAttempt(now);
         synchronizationRepository.save(synchronization);
         try {
-            LocalDate today = LocalDate.ofInstant(now, ZoneOffset.UTC);
-            List<ExternalActivitySummary> activities = client.pullActivities(
-                    today.minusDays(3),
-                    today,
-                    20,
-                    synchronization.getId().toString()
-            );
-            List<SynchronizationCandidate> candidates = activities.stream()
+            LocalDate today = LocalDate.ofInstant(now, properties.zoneId());
+            LocalDate startDate = importStartDate(today);
+            List<ExternalActivitySummary> newActivities = findNewActivities(startDate, today, synchronization.getId().toString());
+            List<SynchronizationCandidate> candidates = newActivities.stream()
+                    .limit(properties.candidateLimit())
                     .map(activity -> SynchronizationCandidate.create(synchronization, activity))
                     .toList();
-            synchronization.complete(candidates, clock.instant());
+            synchronization.complete(candidates, startDate, newActivities.size() <= properties.candidateLimit(), clock.instant());
         } catch (TemporaryGarminConnectorException exception) {
             handleTemporaryFailure(synchronization, exception);
         } catch (GarminConnectionExpiredException | PermanentGarminConnectorException exception) {
             synchronization.permanentFailure(exception.getMessage(), clock.instant());
         }
         return synchronizationRepository.save(synchronization);
+    }
+
+    private LocalDate importStartDate(LocalDate today) {
+        LocalDate configured = properties.configuredImportStartDate();
+        if (configured != null) return configured.isAfter(today) ? today : configured;
+        if (profileRepository == null) return today.minusDays(3);
+        return profileRepository.findFirstByOrderByCreatedAtAsc()
+                .map(profile -> LocalDate.ofInstant(profile.getCreatedAt(), properties.zoneId()))
+                .orElse(today);
+    }
+
+    private List<ExternalActivitySummary> findNewActivities(LocalDate startDate, LocalDate today, String correlationId) {
+        List<ExternalActivitySummary> result = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        LocalDate windowEnd = today;
+        while (!windowEnd.isBefore(startDate) && result.size() <= properties.candidateLimit()) {
+            LocalDate windowStart = windowEnd.minusDays(properties.searchWindowDays() - 1L);
+            if (windowStart.isBefore(startDate)) windowStart = startDate;
+            List<ExternalActivitySummary> activities = client.pullActivities(windowStart, windowEnd, 100, correlationId)
+                    .stream()
+                    .sorted(Comparator.comparing(ExternalActivitySummary::startedAt).reversed())
+                    .filter(activity -> seen.add(activity.sourceActivityId()))
+                    .toList();
+            List<String> identifiers = activities.stream().map(ExternalActivitySummary::sourceActivityId).toList();
+            Set<String> imported = identifiers.isEmpty() ? Set.of() : activityRepository
+                    .findAllBySourceAndSourceExternalIdIn("GARMIN_PERSONNEL", identifiers)
+                    .stream()
+                    .map(SynchronizedActivity::getSourceExternalId)
+                    .collect(java.util.stream.Collectors.toSet());
+            activities.stream().filter(activity -> !imported.contains(activity.sourceActivityId())).forEach(result::add);
+            windowEnd = windowStart.minusDays(1);
+        }
+        result.sort(Comparator.comparing(ExternalActivitySummary::startedAt).reversed());
+        return result;
     }
 
     private void handleTemporaryFailure(ActivitySynchronization synchronization, TemporaryGarminConnectorException exception) {

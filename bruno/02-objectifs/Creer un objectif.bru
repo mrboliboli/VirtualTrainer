@@ -1,0 +1,39 @@
+meta {
+  name: Créer un objectif
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/objectifs
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Requete-Pace: interface-web
+}
+
+body:json {
+  {
+    "nom": "10 km test",
+    "date": "2026-10-18",
+    "distance": 10,
+    "unite": "KM",
+    "type": "10_KM",
+    "url": null,
+    "priorite": 80,
+    "objectifTempsSecondes": 2700,
+    "deniveleCibleMetres": 100,
+    "notes": "Objectif créé depuis Bruno",
+    "statut": "ACTIF",
+    "principal": true
+  }
+}
+
+script:post-response {
+  if (res.status === 201) {
+    bru.setEnvVar("objectifId", res.body.id);
+  }
+}

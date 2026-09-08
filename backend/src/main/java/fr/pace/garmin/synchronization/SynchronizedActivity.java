@@ -52,6 +52,7 @@ public class SynchronizedActivity {
 
     public UUID getId() { return id; }
     public String getSource() { return source; }
+    public String getSourceExternalId() { return sourceExternalId; }
     public String getDetailsJson() { return detailsJson; }
     public Double getPerceivedExertionRpe() { return perceivedExertionRpe; }
     public Double getGarminFeelingScore() { return garminFeelingScore; }

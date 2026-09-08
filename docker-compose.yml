@@ -65,6 +65,8 @@ services:
       PACE_GARMIN_CONNECTOR_URL: http://connecteur-garmin:8081
       PACE_GARMIN_CONNECTOR_TOKEN: ${PACE_CONNECTOR_API_TOKEN:?PACE_CONNECTOR_API_TOKEN est obligatoire}
       PACE_API_ACCESS_TOKEN: ${PACE_API_ACCESS_TOKEN:?PACE_API_ACCESS_TOKEN est obligatoire}
+      PACE_AI_API_KEY: ${PACE_AI_API_KEY:-}
+      PACE_AI_MODEL: ${PACE_AI_MODEL:-gpt-5.6-luna}
     networks:
       - application
       - donnees

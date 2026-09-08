@@ -1,0 +1,11 @@
+meta {
+  name: Lire l'analyse d'une sortie
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/sorties/{{sortieId}}/analyse
+  body: none
+  auth: none
+}

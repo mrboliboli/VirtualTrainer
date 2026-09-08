@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { Chargement, Erreur, EtatVide } from '../composants/EtatContenu';
-import type { TableauDeBord } from '../types';
+import type { Objectif, TableauDeBord } from '../types';
 import type { Page } from '../composants/Navigation';
 
 function joursRestants(date: string): number {
@@ -9,6 +9,13 @@ function joursRestants(date: string): number {
   const maintenant = new Date();
   const aujourdHui = new Date(maintenant.getFullYear(), maintenant.getMonth(), maintenant.getDate(), 12);
   return Math.max(0, Math.ceil((cible.getTime() - aujourdHui.getTime()) / 86_400_000));
+}
+
+function prochainObjectif(objectifs: Objectif[]) {
+  const aujourdHui = new Date();
+  const dateLocale = `${aujourdHui.getFullYear()}-${String(aujourdHui.getMonth() + 1).padStart(2, '0')}-${String(aujourdHui.getDate()).padStart(2, '0')}`;
+  const futurs = objectifs.filter((objectif) => objectif.date >= dateLocale);
+  return futurs.find((objectif) => objectif.principal) ?? futurs[0];
 }
 
 export function TableauDeBordPage({ naviguer }: { naviguer: (page: Page) => void }) {
@@ -19,7 +26,7 @@ export function TableauDeBordPage({ naviguer }: { naviguer: (page: Page) => void
   const charger = () => {
     setChargement(true); setErreur('');
     Promise.all([api.profilOuAbsent(), api.objectifs(), api.sorties(3)])
-      .then(([profil, objectifs, activitesRecentes]) => setDonnees({ profil, objectifPrincipal: objectifs.find((objectif) => objectif.principal), activitesRecentes, alertes: [] }))
+      .then(([profil, objectifs, activitesRecentes]) => setDonnees({ profil, objectifPrincipal: prochainObjectif(objectifs), activitesRecentes, alertes: [] }))
       .catch((e: Error) => setErreur(e.message)).finally(() => setChargement(false));
   };
   useEffect(charger, []);

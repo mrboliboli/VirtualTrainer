@@ -1,0 +1,23 @@
+meta {
+  name: Confirmer le code MFA Garmin
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/garmin/connexion/mfa
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Requete-Pace: interface-web
+}
+
+body:json {
+  {
+    "defiMfaId": "{{defiMfaId}}",
+    "code": "{{garminMfaCode}}"
+  }
+}

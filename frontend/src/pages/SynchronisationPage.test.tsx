@@ -34,7 +34,7 @@ describe('SynchronisationPage', () => {
       }), { status: 202 }));
     vi.stubGlobal('fetch', fetch);
     render(<SynchronisationPage />);
-    await userEvent.click(await screen.findByRole('button', { name: 'Rechercher ma dernière activité' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Rechercher de nouvelles activités' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('La date de l’activité Garmin est invalide.');
     expect(fetch).toHaveBeenCalledTimes(2);
   });
@@ -47,7 +47,7 @@ describe('SynchronisationPage', () => {
       .mockResolvedValueOnce(new Response(JSON.stringify({ id, statut: 'TERMINEE', candidates: [{ idExterne: 'course-42', dateHeure: '2026-08-21T08:30:00Z', sport: 'Course à pied', distanceMetres: 10869, dureeSecondes: 4221, confiance: 'ELEVEE' }] }), { status: 200 }));
     vi.stubGlobal('fetch', fetch);
     render(<SynchronisationPage />);
-    await userEvent.click(await screen.findByRole('button', { name: 'Rechercher ma dernière activité' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Rechercher de nouvelles activités' }));
     expect(await screen.findByText('Course à pied')).toBeVisible();
     expect(screen.getByText('Confiance élevée')).toBeVisible();
     expect(fetch).toHaveBeenNthCalledWith(3, `/api/v1/garmin/synchronisations/${id}`, expect.any(Object));

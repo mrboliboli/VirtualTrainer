@@ -8,8 +8,12 @@ import java.util.Set;
 
 /** Ressenti Garmin extrait sans déduire de sémantique absente du contrat source. */
 record GarminSubjectiveFeedback(Double rpe, Double feelingScore, String source) {
-    private static final Set<String> RPE_FIELDS = Set.of("perceivedExertion", "perceived_exertion");
-    private static final Set<String> FEELING_FIELDS = Set.of("activityFeel", "activity_feel");
+    private static final Set<String> RPE_FIELDS = Set.of(
+            "directWorkoutRpe", "direct_workout_rpe", "perceivedExertion", "perceived_exertion"
+    );
+    private static final Set<String> FEELING_FIELDS = Set.of(
+            "directWorkoutFeel", "direct_workout_feel", "activityFeel", "activity_feel"
+    );
 
     static GarminSubjectiveFeedback from(ExternalActivityDetails details, ObjectMapper mapper) {
         JsonNode metrics = mapper.valueToTree(details.availableMetrics());
@@ -43,7 +47,9 @@ record GarminSubjectiveFeedback(Double rpe, Double feelingScore, String source) 
 
     private static Double normalizeRpe(Double value) {
         if (!inRange(value, 0, 100)) return null;
-        return value > 10 ? value / 10.0 : value;
+        // Garmin encode directWorkoutRpe on a 0..100 scale, in increments of 10.
+        // A raw value of 10 therefore means 1/10, not 10/10.
+        return value / 10.0;
     }
 
     private static boolean inRange(Double value, double minimum, double maximum) {

@@ -1,0 +1,15 @@
+meta {
+  name: Lancer l'analyse d'une sortie
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/sorties/{{sortieId}}/analyse
+  body: none
+  auth: none
+}
+
+headers {
+  X-Requete-Pace: interface-web
+}

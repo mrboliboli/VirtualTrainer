@@ -25,6 +25,8 @@ public class ActivitySynchronization {
     @Column(name = "next_attempt_at") private Instant nextAttemptAt;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
+    @Column(name = "search_start_date") private java.time.LocalDate searchStartDate;
+    @Column(name = "catch_up_complete") private Boolean catchUpComplete;
     @OneToMany(mappedBy = "synchronization", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SynchronizationCandidate> candidates = new ArrayList<>();
 
@@ -49,10 +51,16 @@ public class ActivitySynchronization {
         candidates.clear();
     }
 
-    public void complete(List<SynchronizationCandidate> values, Instant now) {
+    public void complete(List<SynchronizationCandidate> values, java.time.LocalDate startDate, boolean complete, Instant now) {
         candidates.addAll(values);
+        searchStartDate = startDate;
+        catchUpComplete = complete;
         status = SynchronizationStatus.COMPLETED;
         updatedAt = now;
+    }
+
+    public void complete(List<SynchronizationCandidate> values, Instant now) {
+        complete(values, null, false, now);
     }
 
     public void temporaryFailure(String message, Instant nextAttempt, Instant now) {
@@ -75,4 +83,6 @@ public class ActivitySynchronization {
     public String getErrorMessage() { return errorMessage; }
     public Instant getNextAttemptAt() { return nextAttemptAt; }
     public List<SynchronizationCandidate> getCandidates() { return List.copyOf(candidates); }
+    public java.time.LocalDate getSearchStartDate() { return searchStartDate; }
+    public boolean isCatchUpComplete() { return Boolean.TRUE.equals(catchUpComplete); }
 }

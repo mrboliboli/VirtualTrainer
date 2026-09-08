@@ -1,6 +1,18 @@
 # Plan d'implémentation — phase 6, intégration IA
 
-Date de préparation : 3 septembre 2026.
+Date de préparation : 3 septembre 2026. Mise en œuvre lancée le 7 septembre 2026.
+
+## État d'avancement
+
+La phase est implémentée derrière une activation explicite. Le domaine IA, la
+persistance versionnée, l'adaptateur OpenAI Responses, les routes de réglages et
+d'analyse, ainsi que l'interface sont présents. Aucun appel n'est effectué tant que
+les analyses IA ne sont pas activées dans les réglages.
+
+La clé reste exclusivement fournie par `PACE_AI_API_KEY`. Le modèle par défaut est
+`gpt-5.6-luna` et il est verrouillé côté serveur pour cette installation afin de
+maîtriser le budget. L'URL et les limites restent configurables. Le test de
+connexion utilise uniquement des données synthétiques.
 
 ## Objectif de la tranche
 

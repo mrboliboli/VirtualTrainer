@@ -1,0 +1,36 @@
+meta {
+  name: Enregistrer le profil
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/v1/profil
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Requete-Pace: interface-web
+}
+
+body:json {
+  {
+    "prenom": "Fabien",
+    "anneeNaissance": 1985,
+    "tailleCentimetres": 178,
+    "poidsKilogrammes": 72.5,
+    "frequenceCardiaqueMaximale": 185,
+    "frequenceCardiaqueRepos": 50,
+    "seuilCardiaque": 165,
+    "seuilPuissance": 300,
+    "volumeHebdomadaireHabituelKilometres": 35,
+    "joursDisponibles": ["mardi", "jeudi", "dimanche"],
+    "dureeMaximaleSeanceMinutes": 120,
+    "terrainsAccessibles": ["route", "sentier"],
+    "contraintesEtBlessures": null,
+    "preferencesEntrainement": "Trois séances par semaine",
+    "commentaire": null
+  }
+}

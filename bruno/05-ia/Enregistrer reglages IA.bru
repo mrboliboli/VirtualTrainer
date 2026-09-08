@@ -1,0 +1,29 @@
+meta {
+  name: Enregistrer les réglages IA
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/v1/reglages/ia
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Requete-Pace: interface-web
+}
+
+body:json {
+  {
+    "active": false,
+    "fournisseur": "OPENAI",
+    "urlBase": "https://api.openai.com",
+    "modeleAnalyse": "gpt-5.6-luna",
+    "modelePlanification": "gpt-5.6-luna",
+    "temperature": 0.2,
+    "jetonsMaximum": 2000,
+    "instructionsPersonnalisees": null
+  }
+}

@@ -1,4 +1,7 @@
 .env
+.DS_Store
+**/.DS_Store
+.vscode/
 .idea/
 backend/target/
 frontend/node_modules/

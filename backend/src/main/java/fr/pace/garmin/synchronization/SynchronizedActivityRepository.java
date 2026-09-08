@@ -9,5 +9,6 @@ import java.util.UUID;
 
 public interface SynchronizedActivityRepository extends JpaRepository<SynchronizedActivity, UUID> {
     Optional<SynchronizedActivity> findBySourceAndSourceExternalId(String source, String sourceExternalId);
+    List<SynchronizedActivity> findAllBySourceAndSourceExternalIdIn(String source, List<String> sourceExternalIds);
     List<SynchronizedActivity> findAllByOrderByDiscoveredAtDesc(Pageable pageable);
 }

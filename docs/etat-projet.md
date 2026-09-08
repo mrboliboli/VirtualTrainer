@@ -11,7 +11,8 @@ Dernière mise à jour : 3 septembre 2026.
 5. Activités et compte rendu factuel local : liste et détail des sorties, métriques,
    tours, zones, série temporelle, récupération du ressenti Garmin, allure calculée,
    évolution entre les deux moitiés, régularité de puissance et répartition des
-   zones.
+   zones. Le rattrapage historique exclut les sorties déjà importées, présente deux
+   candidates à la fois et avance automatiquement jusqu'à la date de départ.
 
 La revue de la tranche FIT ne signale plus aucun défaut P0 ou P1. Les réserves P2
 restent consignées dans `docs/revue-phase-fit.md`.

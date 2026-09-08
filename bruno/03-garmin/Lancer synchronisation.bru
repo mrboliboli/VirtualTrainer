@@ -1,0 +1,22 @@
+meta {
+  name: Lancer une synchronisation
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/garmin/synchronisations
+  body: none
+  auth: none
+}
+
+headers {
+  X-Requete-Pace: interface-web
+  X-Cle-Idempotence: {{$guid}}
+}
+
+script:post-response {
+  if (res.body && res.body.id) {
+    bru.setEnvVar("synchronisationId", res.body.id);
+  }
+}

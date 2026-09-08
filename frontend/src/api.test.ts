@@ -57,4 +57,13 @@ describe('client API', () => {
     await api.detailSortie('sortie 1');
     expect(fetch).toHaveBeenCalledWith('/api/v1/sorties/sortie%201', expect.any(Object));
   });
+
+  it('utilise les routes de réglages et de régénération IA', async () => {
+    const fetch = vi.fn().mockImplementation(() => Promise.resolve(new Response(JSON.stringify({}), { status: 200 })));
+    vi.stubGlobal('fetch', fetch);
+    await api.testerReglagesIa();
+    await api.regenererAnalyseSortie('sortie 1');
+    expect(fetch).toHaveBeenNthCalledWith(1, '/api/v1/reglages/ia/test', expect.objectContaining({ method: 'POST' }));
+    expect(fetch).toHaveBeenNthCalledWith(2, '/api/v1/sorties/sortie%201/analyse/regeneration', expect.objectContaining({ method: 'POST' }));
+  });
 });
