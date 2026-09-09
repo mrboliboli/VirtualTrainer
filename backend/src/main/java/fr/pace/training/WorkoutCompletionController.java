@@ -19,4 +19,10 @@ public class WorkoutCompletionController {
     public WorkoutCompletionResponse get(@PathVariable UUID id) {
         return service.find(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Séance introuvable."));
     }
+
+    @GetMapping("/derniere-realisation")
+    public WorkoutCompletionResponse latest() {
+        return service.latestCompletion().orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "Aucune séance réalisée rapprochée."));
+    }
 }

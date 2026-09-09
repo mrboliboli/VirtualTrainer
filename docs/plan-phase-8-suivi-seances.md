@@ -1,5 +1,9 @@
 # Plan d'implémentation — phase 8, suivi des séances
 
+**Statut : terminée le 9 septembre 2026.** Le parcours réel import Garmin puis
+génération automatique a été validé par l'utilisateur. La comparaison prévu/réalisé,
+l'exploitation des analyses récentes et les contrats de test ont été complétés.
+
 ## Objectif
 
 Faire passer la prochaine séance d'une simple génération IA à une proposition

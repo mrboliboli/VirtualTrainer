@@ -1,6 +1,6 @@
 # État du projet
 
-Dernière mise à jour : 3 septembre 2026.
+Dernière mise à jour : 9 septembre 2026.
 
 ## Tranches réalisées
 
@@ -13,6 +13,13 @@ Dernière mise à jour : 3 septembre 2026.
    évolution entre les deux moitiés, régularité de puissance et répartition des
    zones. Le rattrapage historique exclut les sorties déjà importées, présente deux
    candidates à la fois et avance automatiquement jusqu'à la date de départ.
+6. Analyses IA structurées, relançables et consultables sans rendre les activités
+   dépendantes du fournisseur IA.
+7. Génération manuelle ou automatique d'une prochaine séance, avec validation des
+   jours disponibles, de la durée maximale et des zones cardiaques du profil.
+8. Cycle de vie des propositions : acceptation, refus, régénération, historique,
+   rapprochement prudent avec une sortie Garmin et comparaison prévu/réalisé sur
+   l'accueil. Les analyses récentes alimentent les suggestions suivantes.
 
 La revue de la tranche FIT ne signale plus aucun défaut P0 ou P1. Les réserves P2
 restent consignées dans `docs/revue-phase-fit.md`.
@@ -28,11 +35,8 @@ corrigée.
 
 ## Prochaine tranche fonctionnelle
 
-La phase 7 génère, sur demande, une prochaine séance structurée à partir de
-l'objectif futur, du profil et de l'historique récent. La proposition doit être
-explicitement acceptée avant d'apparaître comme séance planifiée et n'est jamais
-envoyée automatiquement vers Garmin. Son plan détaillé est décrit dans
-`docs/plan-phase-7-prochaine-seance.md`.
+La phase 8 est fonctionnellement terminée. La prochaine tranche doit être définie
+avant développement ; aucun périmètre de phase 9 n'est encore approuvé.
 
 ## Vérification de gel
 

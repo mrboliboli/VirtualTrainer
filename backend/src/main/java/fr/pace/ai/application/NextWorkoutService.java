@@ -52,8 +52,7 @@ public class NextWorkoutService {
         var profile = profiles.get();
         List<String> days = split(profile.getAvailableDays());
         LocalDate target = nextAvailableDate(today, days);
-        List<String> summaries = activities.recent(3).stream().map(a -> "%s : %s, %s m, %s s".formatted(
-                a.dateHeure(), a.sport(), a.distanceMetres(), a.dureeSecondes())).toList();
+        List<String> summaries = activities.recent(3).stream().map(this::activitySummary).toList();
         String goalSummary = "%s le %s, distance %s %s".formatted(goal.getName(), goal.getEventDate(), goal.getDistance(), goal.getDistanceUnit());
         List<String> constraints = profile.getConstraintsAndInjuries() == null ? List.of() : List.of(profile.getConstraintsAndInjuries());
         var heartRate = new WorkoutGenerationRequest.HeartRateContext(profile.getMaximumHeartRate(),
@@ -109,6 +108,30 @@ public class NextWorkoutService {
     }
 
     public boolean automaticEnabled() { return settings.getOrCreate().isAutoGenerateWorkoutAfterImport(); }
+
+    String activitySummary(fr.pace.activity.SortieResponse activity) {
+        String factual = "%s : %s, %s m, %s s".formatted(activity.dateHeure(), activity.sport(),
+                activity.distanceMetres(), activity.dureeSecondes());
+        String analysisJson = jdbc.query("SELECT response_json FROM ai_call WHERE activity_id=? " +
+                        "AND operation_type='ACTIVITY_ANALYSIS' AND status='REUSSIE' " +
+                        "ORDER BY analysis_version DESC LIMIT 1",
+                (rs, row) -> rs.getString("response_json"), activity.id()).stream().findFirst().orElse(null);
+        if (analysisJson == null || analysisJson.isBlank()) return factual;
+        try {
+            var analysis = mapper.readTree(analysisJson);
+            List<String> insights = new ArrayList<>();
+            addInsight(insights, "Analyse", analysis.path("summary").asText(null));
+            addInsight(insights, "Récupération", analysis.path("recovery").path("recommendation").asText(null));
+            addInsight(insights, "Impact conseillé", analysis.path("nextWorkoutImpact").asText(null));
+            return insights.isEmpty() ? factual : factual + ". " + String.join(". ", insights);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException ignored) {
+            return factual;
+        }
+    }
+
+    private static void addInsight(List<String> target, String label, String value) {
+        if (value != null && !value.isBlank()) target.add(label + " : " + value);
+    }
 
     private NextWorkoutResponse map(java.sql.ResultSet rs) throws java.sql.SQLException {
         try {

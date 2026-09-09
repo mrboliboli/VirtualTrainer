@@ -22,6 +22,7 @@ function donneesInitiales(seance = proposition) {
     if (url.endsWith('/objectifs')) return Promise.resolve(reponseJson([{ id: 'obj-1', nom: '10 km', date: '2026-12-10', unite: 'KM', type: '10_KM', priorite: 1, statut: 'PREVU', principal: true }]));
     if (url.includes('/sorties?')) return Promise.resolve(reponseJson([{ id: 'sortie-1', dateHeure: '2026-09-08T08:00:00Z', sport: 'running', distanceMetres: 10000, dureeSecondes: 3600, frequenceCardiaqueMoyenne: 148, typeEntrainement: 'Base aérobie', source: 'GARMIN_PERSONNEL' }]));
     if (url.endsWith('/seances/prochaine')) return Promise.resolve(reponseJson(seance));
+    if (url.endsWith('/seances/derniere-realisation')) return Promise.resolve(reponseJson({ message: 'Aucune séance réalisée.' }, 404));
     return Promise.reject(new Error(`URL inattendue : ${url}`));
   });
 }
@@ -69,5 +70,26 @@ describe('TableauDeBordPage — prochaine séance', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Refuser' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Le refus n’a pas pu être enregistré.');
     expect(screen.getByText('Endurance progressive')).toBeVisible();
+  });
+
+  it('compare la dernière séance prévue à la sortie rapprochée', async () => {
+    const initial = donneesInitiales().getMockImplementation()!;
+    const fetch = vi.fn().mockImplementation((entree: RequestInfo | URL) => {
+      const url = String(entree);
+      if (url.endsWith('/seances/derniere-realisation')) return Promise.resolve(reponseJson({
+        seanceId: 'seance-0', titre: 'Endurance facile', datePrevue: '2026-09-08', dureePrevueMinutes: 45,
+        statut: 'REALISEE', activiteId: 'sortie-1', dateActivite: '2026-09-08T08:00:00Z', sport: 'running',
+        distanceMetres: 10000, dureeSecondes: 3600, methodeRapprochement: 'DATE_SPORT_FENETRE_1J', rapprocheLe: '2026-09-08T10:00:00Z',
+      }));
+      return initial(entree);
+    });
+    vi.stubGlobal('fetch', fetch);
+    render(<TableauDeBordPage naviguer={vi.fn()} />);
+
+    const carte = (await screen.findByText('Dernière séance rapprochée')).closest('section')!;
+    expect(within(carte).getByText('Endurance facile')).toBeVisible();
+    expect(within(carte).getByText('45 min')).toBeVisible();
+    expect(within(carte).getByText('1 h 00')).toBeVisible();
+    expect(within(carte).getByText('10 km')).toBeVisible();
   });
 });

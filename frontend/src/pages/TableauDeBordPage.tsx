@@ -39,8 +39,8 @@ export function TableauDeBordPage({ naviguer }: { naviguer: (page: Page) => void
 
   const charger = () => {
     setChargement(true); setErreur('');
-    Promise.all([api.profilOuAbsent(), api.objectifs(), api.sorties(3), api.prochaineSeance().catch(e => e instanceof ErreurApi && e.statut === 404 ? undefined : Promise.reject(e))])
-      .then(([profil, objectifs, activitesRecentes, prochaineSeance]) => setDonnees({ profil, objectifPrincipal: prochainObjectif(objectifs), prochaineSeance, activitesRecentes, alertes: [] }))
+    Promise.all([api.profilOuAbsent(), api.objectifs(), api.sorties(3), api.prochaineSeance().catch(e => e instanceof ErreurApi && e.statut === 404 ? undefined : Promise.reject(e)), api.derniereRealisation().catch(e => e instanceof ErreurApi && e.statut === 404 ? undefined : Promise.reject(e))])
+      .then(([profil, objectifs, activitesRecentes, prochaineSeance, derniereRealisation]) => setDonnees({ profil, objectifPrincipal: prochainObjectif(objectifs), prochaineSeance, derniereRealisation, activitesRecentes, alertes: [] }))
       .catch((e: Error) => setErreur(e.message)).finally(() => setChargement(false));
   };
   useEffect(charger, []);
@@ -99,6 +99,13 @@ export function TableauDeBordPage({ naviguer }: { naviguer: (page: Page) => void
         <button className="bouton bouton--large" disabled={!!action || !objectif} onClick={generer}>{action === 'generation' ? 'Génération en cours…' : 'Générer la prochaine séance'}</button>
       </>}
     </section>
+    {donnees.derniereRealisation && <section className="carte carte--realisation">
+      <div className="titre-ligne"><div><p className="surtitre">Dernière séance rapprochée</p><h2>{donnees.derniereRealisation.titre}</h2></div><span className="pastille pastille--succes">Réalisée</span></div>
+      <div className="comparaison-seance">
+        <div><h3>Prévu</h3><p>{donnees.derniereRealisation.dureePrevueMinutes ?? '—'} min</p><span>{new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(`${donnees.derniereRealisation.datePrevue}T12:00:00`))}</span></div>
+        <div><h3>Réalisé</h3><p>{dureeCourte(donnees.derniereRealisation.dureeSecondes)}</p><span>{donnees.derniereRealisation.distanceMetres != null ? `${(donnees.derniereRealisation.distanceMetres / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} km` : 'Distance indisponible'}</span></div>
+      </div>
+    </section>}
     <section className="carte"><div className="titre-ligne"><h2>Dernières sorties</h2><button className="lien-action" onClick={() => naviguer('sorties')}>Tout voir</button></div>{donnees.activitesRecentes.length === 0 ? <p className="texte-discret">Tes activités Garmin apparaîtront ici après leur synchronisation.</p> : <ul className="liste-sorties-accueil">{donnees.activitesRecentes.slice(0, 3).map((activite) => <li key={activite.id}><div className="sortie-accueil__entete"><strong>{activite.typeEntrainement ?? 'Sortie libre'}</strong><time dateTime={activite.dateHeure ?? undefined}>{activite.dateHeure ? new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(new Date(activite.dateHeure)) : 'Date indisponible'}</time></div><dl className="sortie-accueil__mesures"><div><dt>Distance</dt><dd>{activite.distanceMetres !== null ? `${(activite.distanceMetres / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} km` : '—'}</dd></div><div><dt>Durée</dt><dd>{dureeCourte(activite.dureeSecondes)}</dd></div><div><dt>Allure</dt><dd>{allureMoyenne(activite.distanceMetres, activite.dureeSecondes)}</dd></div><div><dt>FC moy.</dt><dd>{activite.frequenceCardiaqueMoyenne !== null ? `${activite.frequenceCardiaqueMoyenne} bpm` : '—'}</dd></div></dl></li>)}</ul>}</section>
   </div>;
 }

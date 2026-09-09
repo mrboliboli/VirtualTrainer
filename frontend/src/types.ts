@@ -53,6 +53,21 @@ export interface SeancePlanifiee {
   versionPrecedenteId?: string;
 }
 
+export interface RealisationSeance {
+  seanceId: string;
+  titre: string;
+  datePrevue: string;
+  dureePrevueMinutes: number | null;
+  statut: 'REALISEE';
+  activiteId: string;
+  dateActivite: string | null;
+  sport: string | null;
+  distanceMetres: number | null;
+  dureeSecondes: number | null;
+  methodeRapprochement: string;
+  rapprocheLe: string;
+}
+
 export interface ActiviteRecente {
   id: string;
   dateHeure: string | null;
@@ -120,6 +135,7 @@ export interface TableauDeBord {
   profil?: ProfilAthlete;
   objectifPrincipal?: Objectif;
   prochaineSeance?: SeancePlanifiee;
+  derniereRealisation?: RealisationSeance;
   recommandationRecuperation?: string;
   activitesRecentes: ActiviteRecente[];
   progressionHebdomadaire?: { realiseKilometres: number; prevuKilometres?: number };

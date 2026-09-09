@@ -1,5 +1,14 @@
 # Recette manuelle — phase 8
 
+## État au 9 septembre 2026
+
+- génération automatique après une sortie Garmin réelle : validée ;
+- proposition de la séance suivante : validée ;
+- comparaison prévu/réalisé sur l'accueil : ajoutée, à contrôler visuellement au
+  prochain redémarrage du backend ;
+- zones cardiaques précises dans le déroulé : ajoutées, à contrôler lors de la
+  prochaine régénération.
+
 ## Préparation
 
 1. Redémarrer le backend dans IntelliJ pour appliquer les migrations V10 et V11.

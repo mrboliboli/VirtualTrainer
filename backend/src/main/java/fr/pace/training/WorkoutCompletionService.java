@@ -49,16 +49,30 @@ public class WorkoutCompletionService {
 
     @Transactional(readOnly = true)
     public Optional<WorkoutCompletionResponse> find(UUID workoutId) {
-        return jdbc.query("SELECT p.id,p.planned_date,p.status,p.completion_match_method,p.completion_matched_at," +
+        return jdbc.query("SELECT p.id,p.title,p.planned_date,p.duration_minutes,p.status,p.completion_match_method,p.completion_matched_at," +
                         "a.id activity_id,s.started_at,s.sport,s.distance_meters,s.elapsed_seconds " +
                         "FROM planned_workout p LEFT JOIN activity a ON a.id=p.completed_activity_id " +
                         "LEFT JOIN activity_fit_summary s ON s.activity_id=a.id WHERE p.id=?",
-                (rs, row) -> new WorkoutCompletionResponse(rs.getObject("id", UUID.class),
-                        rs.getObject("planned_date", LocalDate.class), rs.getString("status"),
+                (rs, row) -> map(rs), workoutId)
+                .stream().findFirst();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<WorkoutCompletionResponse> latestCompletion() {
+        return jdbc.query("SELECT p.id,p.title,p.planned_date,p.duration_minutes,p.status,p.completion_match_method,p.completion_matched_at," +
+                        "a.id activity_id,s.started_at,s.sport,s.distance_meters,s.elapsed_seconds " +
+                        "FROM planned_workout p JOIN activity a ON a.id=p.completed_activity_id " +
+                        "LEFT JOIN activity_fit_summary s ON s.activity_id=a.id " +
+                        "WHERE p.status='REALISEE' ORDER BY p.completion_matched_at DESC LIMIT 1",
+                (rs, row) -> map(rs)).stream().findFirst();
+    }
+
+    private WorkoutCompletionResponse map(java.sql.ResultSet rs) throws java.sql.SQLException {
+        return new WorkoutCompletionResponse(rs.getObject("id", UUID.class), rs.getString("title"),
+                        rs.getObject("planned_date", LocalDate.class), (Integer) rs.getObject("duration_minutes"), rs.getString("status"),
                         rs.getObject("activity_id", UUID.class), instant(rs, "started_at"), rs.getString("sport"),
                         number(rs, "distance_meters"), number(rs, "elapsed_seconds"),
-                        rs.getString("completion_match_method"), instant(rs, "completion_matched_at")), workoutId)
-                .stream().findFirst();
+                        rs.getString("completion_match_method"), instant(rs, "completion_matched_at"));
     }
 
     private Activity parse(UUID id, String json) {
