@@ -35,8 +35,10 @@ corrigée.
 
 ## Prochaine tranche fonctionnelle
 
-La phase 8 est fonctionnellement terminée. La prochaine tranche doit être définie
-avant développement ; aucun périmètre de phase 9 n'est encore approuvé.
+La phase 8 est fonctionnellement terminée. La phase 9 complète la gestion des
+séances planifiées : entraînement effectué, rapprochement manuel, report avec
+historique, modification, annulation et comparaison dans le compte rendu. Son
+périmètre est décrit dans `docs/plan-phase-9-gestion-seances.md`.
 
 ## Vérification de gel
 
