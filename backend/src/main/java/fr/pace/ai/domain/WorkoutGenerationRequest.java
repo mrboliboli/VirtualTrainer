@@ -5,7 +5,8 @@ import java.util.List;
 
 public record WorkoutGenerationRequest(LocalDate targetDate, String goalSummary,
                                        List<String> recentActivitySummaries, List<String> constraints,
-                                       List<String> availableDays, Integer maximumDurationMinutes) {
+                                       List<String> availableDays, Integer maximumDurationMinutes,
+                                       HeartRateContext heartRate) {
     public WorkoutGenerationRequest {
         if (targetDate == null || goalSummary == null || goalSummary.isBlank())
             throw new IllegalArgumentException("La date et l'objectif sont obligatoires");
@@ -15,4 +16,6 @@ public record WorkoutGenerationRequest(LocalDate targetDate, String goalSummary,
         if (maximumDurationMinutes != null && maximumDurationMinutes < 1)
             throw new IllegalArgumentException("La durée maximale doit être positive");
     }
+
+    public record HeartRateContext(Integer maximumBpm, Integer restingBpm, Integer thresholdBpm) { }
 }

@@ -56,8 +56,10 @@ public class NextWorkoutService {
                 a.dateHeure(), a.sport(), a.distanceMetres(), a.dureeSecondes())).toList();
         String goalSummary = "%s le %s, distance %s %s".formatted(goal.getName(), goal.getEventDate(), goal.getDistance(), goal.getDistanceUnit());
         List<String> constraints = profile.getConstraintsAndInjuries() == null ? List.of() : List.of(profile.getConstraintsAndInjuries());
+        var heartRate = new WorkoutGenerationRequest.HeartRateContext(profile.getMaximumHeartRate(),
+                profile.getRestingHeartRate(), profile.getHeartRateThreshold());
         var result = provider.generateWorkout(new WorkoutGenerationRequest(target, goalSummary, summaries, constraints,
-                days, profile.getMaximumSessionDurationMinutes()));
+                days, profile.getMaximumSessionDurationMinutes(), heartRate));
         validate(result.plannedDate(), result.durationMinutes(), today, days, profile.getMaximumSessionDurationMinutes());
         UUID id = UUID.randomUUID(); Instant now = clock.instant();
         Timestamp databaseNow = Timestamp.from(now);

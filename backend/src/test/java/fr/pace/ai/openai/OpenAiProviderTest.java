@@ -51,11 +51,14 @@ class OpenAiProviderTest {
         OpenAiResponsesClient fakeClient = new OpenAiResponsesClient(null, mapper, null, millis -> { }) {
             @Override Response execute(String instructions, com.fasterxml.jackson.databind.JsonNode input,
                                        String schemaName, com.fasterxml.jackson.databind.JsonNode schema, String correlationId) {
+                assertThat(instructions).contains("plage cible précise de fréquence cardiaque en bpm");
+                assertThat(input.path("heartRate").path("maximumBpm").asInt()).isEqualTo(190);
                 return new Response("resp", output, 1, 1);
             }
         };
         var result = new OpenAiProvider(mapper, fakeClient).generateWorkout(new WorkoutGenerationRequest(
-                LocalDate.parse("2026-09-09"), "Course de 20 km", List.of(), List.of(), List.of(), 60));
+                LocalDate.parse("2026-09-09"), "Course de 20 km", List.of(), List.of(), List.of(), 60,
+                new WorkoutGenerationRequest.HeartRateContext(190, 50, 170)));
         assertThat(result.durationMinutes()).isEqualTo(35);
     }
 
